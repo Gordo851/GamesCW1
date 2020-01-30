@@ -26,6 +26,10 @@ using namespace std;
 #include "shapes.h"
 
 // MAIN FUNCTIONS
+float getDistanceBetweenCenters(Shapes shape1, Shapes shape2);
+float getX(Shapes shape);
+float getY(Shapes shape);
+float getZ(Shapes shape);
 void startup();
 void updateCamera();
 void updateSceneElements();
@@ -93,8 +97,55 @@ int main()
 
    // cout << "\nPress any key to continue...\n";
    // cin.ignore(); cin.get(); // delay closing console to read debugging errors.
+	cout << "here\n";
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			cout << myCube.mv_matrix[j][i] << " ";
+		}
+		cout << "\n";
+	}
+	float cubex = getX(myCube);
+	float cubey = getY(myCube);
+	float cubez = getZ(myCube);
+	float spherex = getX(mySphere);
+	float spherey = getY(mySphere);
+	float spherez = getZ(mySphere);
 
+	float cubesphere = getDistanceBetweenCenters(myCube, mySphere);
+	cout << "\n" << cubesphere;
+	float cubesphere1 = getDistanceBetweenCenters(myCube, myCylinder);
+	cout << "\n" << cubesphere1;
+	float cubesphere2 = getDistanceBetweenCenters(myCylinder, mySphere);
+	cout << "\n" << cubesphere2;
 	return 0;
+	return 0;
+}
+
+float getX(Shapes shape) {
+	float x_location = shape.mv_matrix[3][0];
+	return x_location;
+}
+float getY(Shapes shape) {
+	float y_location = shape.mv_matrix[3][1];
+	return y_location;
+}
+float getZ(Shapes shape) {
+	float z_location = shape.mv_matrix[3][2];
+	return z_location;
+}
+float getDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
+	float shape1x = getX(shape1);
+	float shape1y = getY(shape1);
+	float shape1z = getZ(shape1); 
+	float shape2x = getX(shape2);
+	float shape2y = getY(shape2);
+	float shape2z = getZ(shape2);
+	float distancex = shape1x - shape2x;
+	float distancey= shape1y - shape2y;
+	float distancez = shape1z - shape2z;
+	float xycomponent = sqrt((distancex * distancex) + (distancey * distancey));
+	float finalDistance = sqrt((xycomponent * xycomponent) + (distancez * distancez));
+	return finalDistance;
 }
 
 void startup() {
