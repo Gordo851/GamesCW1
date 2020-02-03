@@ -1,0 +1,4 @@
+﻿  GPGame_Template_VS2019_x64.cpp
+C:\Users\samth\Documents\Heriot Watt\Games Programing\GPGameTemplate-master\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(368,13): warning C4305: '+=': truncation from 'double' to 'float'
+C:\Users\samth\Documents\Heriot Watt\Games Programing\GPGameTemplate-master\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(372,13): warning C4305: '-=': truncation from 'double' to 'float'
+  GPGame_Template_VS2019_x64.vcxproj -> C:\Users\samth\Documents\Heriot Watt\Games Programing\GPGameTemplate-master\GPGame_Template_VS2019_x64\x64\Debug\GPGame_Template_VS2019_x64.exe
