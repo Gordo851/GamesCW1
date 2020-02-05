@@ -62,8 +62,8 @@ Arrow       arrowZ;
 Cube        myFloor;
 Line        myLine;
 Cylinder    myCylinder;
-list<Shapes> allShapes = { myCube, mySphere, myCylinder };
 
+vector<Shapes> allShapes;
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
 
@@ -105,12 +105,7 @@ int main()
    // cout << "\nPress any key to continue...\n";
    // cin.ignore(); cin.get(); // delay closing console to read debugging errors.
 	cout << "here\n";
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			cout << myCube.w_matrix[j][i] << " ";
-		}
-		cout << "\n";
-	}
+
 	float cubex = getX(myCube);
 	float cubey = getY(myCube);
 	float cubez = getZ(myCube);
@@ -158,7 +153,7 @@ float getDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
 bool isColliding(Shapes shape1, Shapes shape2) 
 {
 	float distBetween = getDistanceBetweenCenters(shape1, shape2);
-	if (distBetween < 1)
+	if (distBetween < 2)
 	{
 		return true;
 	}
@@ -167,7 +162,23 @@ bool isColliding(Shapes shape1, Shapes shape2)
 	}
 
 }
-
+void checkCollisions() {
+	//Itteration for allShapes
+	for (int i = 0; i < allShapes.size(); i++)
+	{
+		for (int j = 0; j < allShapes.size(); j++)
+		{
+			if (i != j) 
+			{
+				bool colliding = isColliding(allShapes[i], allShapes[j]);
+				if (colliding == true)
+				{
+					cout << "COLLIDING" << "\n";
+				}
+			}
+		}
+	}
+}
 void startup() {
 	// Keep track of the running time
 	GLfloat currentTime = (GLfloat)glfwGetTime();    // retrieve timelapse
@@ -188,8 +199,10 @@ void startup() {
 
 	// Load Geometry examples
 	myCube.Load();
+	allShapes.push_back(myCube);
 
 	mySphere.Load();
+	allShapes.push_back(mySphere);
 	mySphere.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);    // You can change the shape fill colour, line colour or linewidth
 
 	arrowX.Load(); arrowY.Load(); arrowZ.Load();
@@ -202,6 +215,7 @@ void startup() {
 	myFloor.lineColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand again
 
 	myCylinder.Load();
+	allShapes.push_back(myCylinder);
 	myCylinder.fillColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
 	myCylinder.lineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -335,19 +349,14 @@ void updateSceneElements() {
 
 	if (glfwWindowShouldClose(myGraphics.window) == GL_TRUE) quit = true; // If quit by pressing x on window.
 
-//Itteration for allShapes
-	list<Shapes>::iterator itAllShapes;
-	for (itAllShapes = allShapes.begin(); itAllShapes != allShapes.end(); itAllShapes++)
-	{
-
-
-	}
-	bool colliding = isColliding(mySphere, myCube);
-	cout << colliding << "\n";
+	checkCollisions();
 
 
 
 }
+
+
+
 
 void renderScene() {
 	// Clear viewport - start a new frame.
@@ -382,17 +391,17 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 	if (action == GLFW_PRESS) keyStatus[key] = true;
 	else if (action == GLFW_RELEASE) keyStatus[key] = false;
 	if (keyStatus[GLFW_KEY_J] == true) {
-		cx += 0.01;
+		cx += 0.05;
 	}
 	if (keyStatus[GLFW_KEY_L] == true) {
-		cx -= 0.01;
+		cx -= 0.05;
 	}
 
 	if (keyStatus[GLFW_KEY_I] == true) {
-		cy += 0.01;
+		cy += 0.05;
 	}
 	if (keyStatus[GLFW_KEY_K] == true) {
-		cy -= 0.01;
+		cy -= 0.05;
 	}
 	// toggle showing mouse.
 	if (keyStatus[GLFW_KEY_M]) {
