@@ -1,2 +1,6 @@
 ﻿  GPGame_Template_VS2019_x64.cpp
-  GPGame_Template_VS2019_x64.vcxproj -> D:\GPGameTemplate-master\GPGame_Template_VS2019_x64\x64\Debug\GPGame_Template_VS2019_x64.exe
+C:\Users\gr2\Desktop\GamesCW1-master\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(385,13): warning C4305:  '+=': truncation from 'double' to 'float'
+C:\Users\gr2\Desktop\GamesCW1-master\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(388,13): warning C4305:  '-=': truncation from 'double' to 'float'
+C:\Users\gr2\Desktop\GamesCW1-master\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(392,13): warning C4305:  '-=': truncation from 'double' to 'float'
+C:\Users\gr2\Desktop\GamesCW1-master\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(395,13): warning C4305:  '-=': truncation from 'double' to 'float'
+  GPGame_Template_VS2019_x64.vcxproj -> C:\Users\gr2\Desktop\GamesCW1-master\GPGame_Template_VS2019_x64\x64\Debug\GPGame_Template_VS2019_x64.exe

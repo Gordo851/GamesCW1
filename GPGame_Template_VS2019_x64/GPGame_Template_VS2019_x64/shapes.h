@@ -28,6 +28,7 @@ public:
 	GLint           color_location;
 	glm::mat4		proj_matrix = glm::mat4(1.0f);
 	glm::mat4		mv_matrix = glm::mat4(1.0f);
+	glm::mat4		w_matrix = glm::mat4(1.0f);
 
 	glm::vec4		fillColor = glm::vec4(1.0, 0.0, 0.0, 1.0);
 	glm::vec4		lineColor = glm::vec4(0.0, 0.0, 0.0, 1.0);

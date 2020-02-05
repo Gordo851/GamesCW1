@@ -13,6 +13,7 @@
 // Standard C++ libraries
 #include <iostream>
 #include <vector>
+#include <list>
 using namespace std;
 
 // Helper graphic libraries
@@ -61,10 +62,16 @@ Arrow       arrowZ;
 Cube        myFloor;
 Line        myLine;
 Cylinder    myCylinder;
+list<Shapes> allShapes = { myCube, mySphere, myCylinder };
 
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
 
+
+
+float cx = 2.0f;
+float cy = 0.5f;
+float cz = 0.0f;
 
 int main()
 {
@@ -100,7 +107,7 @@ int main()
 	cout << "here\n";
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			cout << myCube.mv_matrix[j][i] << " ";
+			cout << myCube.w_matrix[j][i] << " ";
 		}
 		cout << "\n";
 	}
@@ -122,15 +129,15 @@ int main()
 }
 
 float getX(Shapes shape) {
-	float x_location = shape.mv_matrix[3][0];
+	float x_location = shape.w_matrix[3][0];
 	return x_location;
 }
 float getY(Shapes shape) {
-	float y_location = shape.mv_matrix[3][1];
+	float y_location = shape.w_matrix[3][1];
 	return y_location;
 }
 float getZ(Shapes shape) {
-	float z_location = shape.mv_matrix[3][2];
+	float z_location = shape.w_matrix[3][2];
 	return z_location;
 }
 float getDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
@@ -146,6 +153,19 @@ float getDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
 	float xycomponent = sqrt((distancex * distancex) + (distancey * distancey));
 	float finalDistance = sqrt((xycomponent * xycomponent) + (distancez * distancez));
 	return finalDistance;
+}
+
+bool isColliding(Shapes shape1, Shapes shape2) 
+{
+	float distBetween = getDistanceBetweenCenters(shape1, shape2);
+	if (distBetween < 1)
+	{
+		return true;
+	}
+	else {
+		return false;
+	}
+
 }
 
 void startup() {
@@ -250,20 +270,20 @@ void updateSceneElements() {
 	// Do not forget your ( T * R * S ) http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
 
 	// Calculate Cube position
-	glm::mat4 mv_matrix_cube =
-		glm::translate(glm::vec3(2.0f, 0.5f, 0.0f)) *
+	myCube.w_matrix = 
+		glm::translate(glm::vec3(cx, cy, cz)) *
 		glm::mat4(1.0f);
-	myCube.mv_matrix = myGraphics.viewMatrix * mv_matrix_cube;
+	myCube.mv_matrix = myGraphics.viewMatrix * myCube.w_matrix;
 	myCube.proj_matrix = myGraphics.proj_matrix;
 
 	// calculate Sphere movement
-	glm::mat4 mv_matrix_sphere =
-		glm::translate(glm::vec3(-2.0f, 0.5f, 0.0f)) *
+	mySphere.w_matrix = glm::translate(glm::vec3(-2.0f, 0.5f, 0.0f)) *
 		glm::rotate(-t, glm::vec3(0.0f, 1.0f, 0.0f)) *
 		glm::rotate(-t, glm::vec3(1.0f, 0.0f, 0.0f)) *
 		glm::mat4(1.0f);
-	mySphere.mv_matrix = myGraphics.viewMatrix * mv_matrix_sphere;
+	mySphere.mv_matrix = myGraphics.viewMatrix * mySphere.w_matrix;
 	mySphere.proj_matrix = myGraphics.proj_matrix;
+
 
 	//Calculate Arrows translations (note: arrow model points up)
 	glm::mat4 mv_matrix_x =
@@ -315,6 +335,18 @@ void updateSceneElements() {
 
 	if (glfwWindowShouldClose(myGraphics.window) == GL_TRUE) quit = true; // If quit by pressing x on window.
 
+//Itteration for allShapes
+	list<Shapes>::iterator itAllShapes;
+	for (itAllShapes = allShapes.begin(); itAllShapes != allShapes.end(); itAllShapes++)
+	{
+
+
+	}
+	bool colliding = isColliding(mySphere, myCube);
+	cout << colliding << "\n";
+
+
+
 }
 
 void renderScene() {
@@ -349,7 +381,19 @@ void onResizeCallback(GLFWwindow* window, int w, int h) {    // call everytime t
 void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) { // called everytime a key is pressed
 	if (action == GLFW_PRESS) keyStatus[key] = true;
 	else if (action == GLFW_RELEASE) keyStatus[key] = false;
+	if (keyStatus[GLFW_KEY_J] == true) {
+		cx += 0.01;
+	}
+	if (keyStatus[GLFW_KEY_L] == true) {
+		cx -= 0.01;
+	}
 
+	if (keyStatus[GLFW_KEY_I] == true) {
+		cy += 0.01;
+	}
+	if (keyStatus[GLFW_KEY_K] == true) {
+		cy -= 0.01;
+	}
 	// toggle showing mouse.
 	if (keyStatus[GLFW_KEY_M]) {
 		mouseEnabled = !mouseEnabled;
