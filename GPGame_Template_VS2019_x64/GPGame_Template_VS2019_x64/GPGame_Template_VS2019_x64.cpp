@@ -122,13 +122,13 @@ int main()
 	cout << "\n" << cubesphere1;
 	float cubesphere2 = getDistanceBetweenCenters(myCylinder, mySphere);
 	cout << "\n" << cubesphere2;
+
 	/*
 	cout << "here2  \n";
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		cout << allShapes[i].collision_type << "\n";
 	}
-
 	cout << "here3\n";
 	cout << &allShapes[0].w_matrix[0][1] << "\n";
 	cout << allShapes[1].w_matrix[0][1] << "\n";
@@ -139,24 +139,38 @@ int main()
 	cout << myCube2.w_matrix[0][1] << "\n";
 	cout << mySphere.w_matrix[0][1] << "\n";
 	cout << myCylinder.w_matrix[0][1] << "\n";
-
 	*/
+	
 	return 0;
 }
 
+/**
+get the objects X position
+*/
 float getX(Shapes shape) {
+	
 	float x_location = shape.w_matrix[3][0];
 	return x_location;
 }
+/**
+get the objects Y position
+*/
 float getY(Shapes shape) {
+	
 	float y_location = shape.w_matrix[3][1];
 	return y_location;
 }
+/**
+get the objects Z position
+*/
 float getZ(Shapes shape) {
+	
 	float z_location = shape.w_matrix[3][2];
 	return z_location;
 }
-
+/**
+get the distance in the Y axis between the centeres of two objects
+*/
 float getYDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
 	
 	float shape1y = getY(shape1);	
@@ -165,15 +179,10 @@ float getYDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
 
 
 }
-float getYDistanceBetweenCenters(Shapes shape1, glm::vec3 point2) {
 
-	float shape1y = getY(shape1);
-	float shape2y = point2[1];
-	return shape1y - shape2y;
-
-
-}
-
+/**
+get the distance in the X axis between the centers of two objects
+*/
 float getXDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
 
 	float shape1x = getX(shape1);
@@ -181,13 +190,9 @@ float getXDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
 	return shape1x - shape2x;
 }
 
-float getXDistanceBetweenCenters(Shapes shape1, glm::vec3 point2) {
-
-	float shape1x = getX(shape1);
-	float shape2x = point2[0];
-	return shape1x - shape2x;
-}
-
+/**
+get the distance in the Z axis between the centers of two objects
+*/
 float getZDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
 	
 	float shape1z = getZ(shape1);
@@ -195,13 +200,10 @@ float getZDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
 	return shape1z - shape2z;
 }
 
-float getZDistanceBetweenCenters(Shapes shape1, glm::vec3 point2) {
 
-	float shape1z = getZ(shape1);
-	float shape2z = point2[2];
-	return shape1z - shape2z;
-}
-
+/**
+get the shortest distance between the centers of two objects
+*/
 float getDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
 	float distancex = getXDistanceBetweenCenters(shape1, shape2);
 	float distancey = getYDistanceBetweenCenters(shape1, shape2);
@@ -209,6 +211,9 @@ float getDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
 	return sqrt((distancex * distancex) + (distancey * distancey) + (distancez * distancez));
 }
 
+/**
+calculate an objects vertex positions in the world view
+*/
 vector<GLfloat> newVertPositions(Shapes shape) {
 	vector<GLfloat> newPositions;
 	for (unsigned int i = 0; i < shape.vertexPositions.size(); i += 3) {
@@ -221,6 +226,10 @@ vector<GLfloat> newVertPositions(Shapes shape) {
 	//cout << shape.vertexPositions.size() << "unmoved\n";
 	return newPositions;
 }
+
+/**
+calculate of an object is colliding in the x, y , or z axis ( set xyz to x, y ,or z for the required axis)
+*/
 bool isCollidingXYZ(float Distance, vector<GLfloat> shape1VertPos, vector<GLfloat> shape2VertPos, XYZ xyz) {
 	float shape1Pos;
 	float shape2Pos;
@@ -269,40 +278,72 @@ bool isCollidingXYZ(float Distance, vector<GLfloat> shape1VertPos, vector<GLfloa
 }
 
 
-float getDistanceBetweenCenters(Shapes shape1, glm::vec3 point2){
-	float distancex = getXDistanceBetweenCenters(shape1, point2);
-	float distancey = getYDistanceBetweenCenters(shape1, point2);
-	float distancez = getZDistanceBetweenCenters(shape1, point2);
-	return sqrt((distancex * distancex) + (distancey * distancey) + (distancez * distancez));
-}
-
+/**
+check if sphere and cube are colliding - called from iscolliding()
+*/
 bool cubeSphereCollision(Shapes sphere1, Shapes cube1) {
 	
 	vector<GLfloat> shape2VertPos = newVertPositions(cube1);
-	float radias = 0.5f;
+	vector<GLfloat> shape1VertPos;
+	shape1VertPos.push_back(getX(sphere1));
+	shape1VertPos.push_back(getY(sphere1));
+	shape1VertPos.push_back(getZ(sphere1));
+	float radias = 0.5f;///////////////
+	//cout << shape1VertPos[0] << " " << shape1VertPos[1] << " " << shape1VertPos[2] << "\n";
+	float distX = getXDistanceBetweenCenters(sphere1, cube1);
+	float distY = getYDistanceBetweenCenters(sphere1, cube1);
+	float distZ = getZDistanceBetweenCenters(sphere1, cube1);
 	
-	float mindist = numeric_limits<float>::max();
+	float alpha = atan2(abs(distX), abs(distY));
 	
-	for (unsigned int i = 0; i < shape2VertPos.size(); i += 3) {
-		glm::vec3 position = glm::vec3(shape2VertPos[i], shape2VertPos[i+1], shape2VertPos[i+2]);
-		float dist = getDistanceBetweenCenters(sphere1, position);
-		if (dist < mindist) {
-			mindist = dist;
-			
-			
-		}
-	}
-//	cout << mindist << " ";
-	if (mindist - radias <= 0) {
-		return true;
-	}
-	
-	return false;
+	float X = radias * sin(alpha);
+	float Y = radias * cos(alpha);
 
+	float alpha2 = atan2(abs(distX), abs(distZ));
+	float Z = radias * cos(alpha2);
+	if (distX < 0) {
+		//max in x for shape 1 min in x for shape2
+		shape1VertPos[0] += X;
+	}
+	else {
+		shape1VertPos[0] -= X;
+	}
+	if (distY < 0) {
+		//max in x for shape 1 min in x for shape2
+		shape1VertPos[1] += Y;
+	}
+	else {
+		shape1VertPos[1] -= Y;
+	}
+	if (distZ < 0) {
+		//max in x for shape 1 min in x for shape2
+		shape1VertPos[2] += Z;
+	}
+	else {
+		shape1VertPos[2] -= Z;
+	}
+
+	//cout << shape1VertPos[0] << " " << shape1VertPos[1] << " " << shape1VertPos[2] << "\n \n";
+
+	if (isCollidingXYZ(distX, shape1VertPos, shape2VertPos, x) == true) {
+
+		if (isCollidingXYZ(distY, shape1VertPos, shape2VertPos, y) == true) {
+
+			if (isCollidingXYZ(distZ, shape1VertPos, shape2VertPos, z) == true) {
+				return true;
+			}
+		}
+
+		
+
+	}
+
+	return false;
 	
 
 }
 
+//check if two objects are colliding
 bool isColliding(Shapes shape1, Shapes shape2) 
 {
 	if (shape1.collision_type == sphere && shape2.collision_type == sphere) {
@@ -345,7 +386,7 @@ bool isColliding(Shapes shape1, Shapes shape2)
 	return false;
 
 }
-void checkCollisions() 
+void checkCollisions()
 {
 	for (int i = 0; i < allShapes.size(); i++)
 	{
@@ -359,7 +400,7 @@ void checkCollisions()
 	{
 		for (int j = 0; j < allShapes.size(); j++)
 		{
-			if (i != j) 
+			if (i != j)
 			{
 				Shapes& shape1 = *allShapes[i];
 				Shapes& shape2 = *allShapes[j];
@@ -370,7 +411,7 @@ void checkCollisions()
 					shape2.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				}
 
-				
+
 			}
 		}
 	}
@@ -394,6 +435,7 @@ void startup() {
 	myGraphics.proj_matrix = glm::perspective(glm::radians(50.0f), myGraphics.aspect, 0.1f, 1000.0f);
 
 	// Load Geometry examples
+	
 	myCube.Load();
 	myCube.collision_type = cube;
 	allShapes.push_back(&myCube);
@@ -415,6 +457,7 @@ void startup() {
 	myFloor.lineColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand again
 
 	myCylinder.Load();
+	// myCylinder.collision_type = cube;
 	allShapes.push_back(&myCylinder);
 	myCylinder.fillColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
 	myCylinder.lineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -491,14 +534,14 @@ void updateSceneElements() {
 	myCube.proj_matrix = myGraphics.proj_matrix;
 
 	myCube2.w_matrix =
-		glm::translate(glm::vec3(-2.0f, 2.5f, 0.0f)) * 
+		glm::translate(glm::vec3(-2.0f, 2.5f, 1.5f)) * 
 		glm::rotate(glm::radians(-40.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
 		glm::mat4(1.0f);
 	myCube2.mv_matrix = myGraphics.viewMatrix * myCube2.w_matrix;
 	myCube2.proj_matrix = myGraphics.proj_matrix;
 
 	// calculate Sphere movement
-	mySphere.w_matrix = glm::translate(glm::vec3(-2.0f, 0.5f, 0.5f)) *
+	mySphere.w_matrix = glm::translate(glm::vec3(-2.0f, 0.5f, -1.5f)) *
 		glm::rotate(-t, glm::vec3(0.0f, 1.0f, 0.0f)) *
 		glm::rotate(-t, glm::vec3(1.0f, 0.0f, 0.0f)) *
 		glm::mat4(1.0f);
@@ -540,7 +583,7 @@ void updateSceneElements() {
 
 	// Calculate cylinder
 	myCylinder.mv_matrix = myGraphics.viewMatrix *
-		glm::translate(glm::vec3(-1.0f, 0.5f, 2.0f)) *
+		glm::translate(glm::vec3(0.0f, 0.0f, -1.5f)) *
 		glm::mat4(1.0f);
 	myCylinder.proj_matrix = myGraphics.proj_matrix;
 
@@ -610,6 +653,13 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 	}
 	if (keyStatus[GLFW_KEY_K] == true) {
 		cy -= 0.05;
+	}
+
+	if (keyStatus[GLFW_KEY_O] == true) {
+		cz += 0.05;
+	}
+	if (keyStatus[GLFW_KEY_P] == true) {
+		cz -= 0.05;
 	}
 	// toggle showing mouse.
 	if (keyStatus[GLFW_KEY_M]) {
