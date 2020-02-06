@@ -66,7 +66,7 @@ Cube        myFloor;
 Line        myLine;
 Cylinder    myCylinder;
 
-vector<Shapes> allShapes;
+vector<Shapes*> allShapes;
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
 
@@ -122,7 +122,25 @@ int main()
 	cout << "\n" << cubesphere1;
 	float cubesphere2 = getDistanceBetweenCenters(myCylinder, mySphere);
 	cout << "\n" << cubesphere2;
-	return 0;
+	/*
+	cout << "here2  \n";
+	for (int i = 0; i < allShapes.size(); i++)
+	{
+		cout << allShapes[i].collision_type << "\n";
+	}
+
+	cout << "here3\n";
+	cout << &allShapes[0].w_matrix[0][1] << "\n";
+	cout << allShapes[1].w_matrix[0][1] << "\n";
+	cout << allShapes[2].w_matrix[0][1] << "\n";
+	cout << allShapes[3].w_matrix[0][1] << "\n";
+	cout << "here4\n";
+	cout << myCube.w_matrix[0][1] << "\n";
+	cout << myCube2.w_matrix[0][1] << "\n";
+	cout << mySphere.w_matrix[0][1] << "\n";
+	cout << myCylinder.w_matrix[0][1] << "\n";
+
+	*/
 	return 0;
 }
 
@@ -274,7 +292,7 @@ bool cubeSphereCollision(Shapes sphere1, Shapes cube1) {
 			
 		}
 	}
-	cout << mindist << " ";
+//	cout << mindist << " ";
 	if (mindist - radias <= 0) {
 		return true;
 	}
@@ -327,27 +345,35 @@ bool isColliding(Shapes shape1, Shapes shape2)
 	return false;
 
 }
-void checkCollisions() {
+void checkCollisions() 
+{
+	for (int i = 0; i < allShapes.size(); i++)
+	{
+		Shapes& shape1 = *allShapes[i];
+		shape1.fillColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+
+	}
+
 	//Itteration for allShapes
-	bool colliding = isColliding( myCube, mySphere);
-	cout << colliding << "\n";
-	
-	/*
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		for (int j = 0; j < allShapes.size(); j++)
 		{
 			if (i != j) 
 			{
-				bool colliding = isColliding(allShapes[i], allShapes[j]);
+				Shapes& shape1 = *allShapes[i];
+				Shapes& shape2 = *allShapes[j];
+				bool colliding = isColliding(shape1, shape2);
 				if (colliding == true)
 				{
-					cout << "COLLIDING" << "\n";
+					shape1.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+					shape2.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				}
+
+				
 			}
 		}
 	}
-	*/
 }
 void startup() {
 	// Keep track of the running time
@@ -370,13 +396,13 @@ void startup() {
 	// Load Geometry examples
 	myCube.Load();
 	myCube.collision_type = cube;
-	allShapes.push_back(myCube);
+	allShapes.push_back(&myCube);
 	myCube2.Load();
 	myCube2.collision_type = cube;
-	allShapes.push_back(myCube2);
+	allShapes.push_back(&myCube2);
 
 	mySphere.Load();
-	allShapes.push_back(mySphere);
+	allShapes.push_back(&mySphere);
 	mySphere.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);    // You can change the shape fill colour, line colour or linewidth
 
 	arrowX.Load(); arrowY.Load(); arrowZ.Load();
@@ -389,7 +415,7 @@ void startup() {
 	myFloor.lineColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand again
 
 	myCylinder.Load();
-	allShapes.push_back(myCylinder);
+	allShapes.push_back(&myCylinder);
 	myCylinder.fillColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
 	myCylinder.lineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
