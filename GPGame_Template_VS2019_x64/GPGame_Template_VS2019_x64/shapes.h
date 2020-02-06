@@ -48,6 +48,7 @@ public:
 	glm::vec4		lineColor = glm::vec4(0.0, 0.0, 0.0, 1.0);
 	float			lineWidth = 2.0f;
 	Collision collision_type = sphere;//defult collision sphere
+	float radius = 0.0f;
 
 
 protected:

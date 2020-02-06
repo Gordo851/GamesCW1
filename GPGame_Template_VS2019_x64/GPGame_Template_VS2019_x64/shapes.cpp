@@ -76,6 +76,18 @@ void Shapes::LoadObj() {
 		vertexPositions.push_back(obj_vertices[vertexIndices[i + 2] - 1].y);
 		vertexPositions.push_back(obj_vertices[vertexIndices[i + 2] - 1].z);
 	}
+
+	
+	float maxdistance = 0;
+	for (unsigned int i = 0; i < vertexPositions.size(); i += 3) {
+		float dis = 0;
+		dis = (sqrt(vertexPositions[i] * vertexPositions[i] + vertexPositions[i+1] * vertexPositions[i+1] + vertexPositions[i+2] * vertexPositions[i+2]));
+		if (dis > maxdistance) {
+			maxdistance = dis;
+		}
+	}
+	radius = maxdistance;
+	
 }
 
 
