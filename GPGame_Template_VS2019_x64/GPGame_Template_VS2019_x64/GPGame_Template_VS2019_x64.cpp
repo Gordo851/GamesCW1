@@ -582,10 +582,9 @@ void updateSceneElements() {
 	myFloor.proj_matrix = myGraphics.proj_matrix;
 
 	// Calculate cylinder
-	myCylinder.mv_matrix = myGraphics.viewMatrix *
-		glm::translate(glm::vec3(0.0f, 0.0f, -1.5f)) *
+	myCylinder.w_matrix = glm::translate(glm::vec3(0.0f, 0.0f, -1.5f)) *
 		glm::mat4(1.0f);
-	myCylinder.proj_matrix = myGraphics.proj_matrix;
+	myCylinder.mv_matrix = myGraphics.viewMatrix * myCylinder.w_matrix;
 
 	// Calculate Line
 	myLine.mv_matrix = myGraphics.viewMatrix *
