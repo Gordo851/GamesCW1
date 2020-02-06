@@ -8,6 +8,20 @@ using namespace std;
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+enum Collision
+{
+	sphere,
+	cube
+
+
+};
+
+enum XYZ {
+	x = 0,
+	y = 1,
+	z = 2
+};
+
 class Shapes {
 
 public:
@@ -33,11 +47,15 @@ public:
 	glm::vec4		fillColor = glm::vec4(1.0, 0.0, 0.0, 1.0);
 	glm::vec4		lineColor = glm::vec4(0.0, 0.0, 0.0, 1.0);
 	float			lineWidth = 2.0f;
+	Collision collision_type = sphere;//defult collision sphere
+
 
 protected:
 	string rawData;			// Import obj file from Blender (note: no textures or UVs).
 	void LoadObj();
 };
+
+
 
 class Cube : public Shapes {
 public:

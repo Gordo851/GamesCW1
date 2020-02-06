@@ -23,8 +23,10 @@ using namespace std;
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include "graphics.h"
 #include "shapes.h"
+#include <limits>
 
 // MAIN FUNCTIONS
 float getDistanceBetweenCenters(Shapes shape1, Shapes shape2);
@@ -55,6 +57,7 @@ Graphics    myGraphics;        // Runing all the graphics in this object
 
 // DEMO OBJECTS
 Cube        myCube;
+Cube        myCube2;
 Sphere      mySphere;
 Arrow       arrowX;
 Arrow       arrowY;
@@ -135,35 +138,201 @@ float getZ(Shapes shape) {
 	float z_location = shape.w_matrix[3][2];
 	return z_location;
 }
-float getDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
-	float shape1x = getX(shape1);
-	float shape1y = getY(shape1);
-	float shape1z = getZ(shape1); 
-	float shape2x = getX(shape2);
+
+float getYDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
+	
+	float shape1y = getY(shape1);	
 	float shape2y = getY(shape2);
+	return shape1y - shape2y;
+
+
+}
+float getYDistanceBetweenCenters(Shapes shape1, glm::vec3 point2) {
+
+	float shape1y = getY(shape1);
+	float shape2y = point2[1];
+	return shape1y - shape2y;
+
+
+}
+
+float getXDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
+
+	float shape1x = getX(shape1);
+	float shape2x = getX(shape2);
+	return shape1x - shape2x;
+}
+
+float getXDistanceBetweenCenters(Shapes shape1, glm::vec3 point2) {
+
+	float shape1x = getX(shape1);
+	float shape2x = point2[0];
+	return shape1x - shape2x;
+}
+
+float getZDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
+	
+	float shape1z = getZ(shape1);
 	float shape2z = getZ(shape2);
-	float distancex = shape1x - shape2x;
-	float distancey= shape1y - shape2y;
-	float distancez = shape1z - shape2z;
-	float xycomponent = sqrt((distancex * distancex) + (distancey * distancey));
-	float finalDistance = sqrt((xycomponent * xycomponent) + (distancez * distancez));
-	return finalDistance;
+	return shape1z - shape2z;
+}
+
+float getZDistanceBetweenCenters(Shapes shape1, glm::vec3 point2) {
+
+	float shape1z = getZ(shape1);
+	float shape2z = point2[2];
+	return shape1z - shape2z;
+}
+
+float getDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
+	float distancex = getXDistanceBetweenCenters(shape1, shape2);
+	float distancey = getYDistanceBetweenCenters(shape1, shape2);
+	float distancez = getZDistanceBetweenCenters(shape1, shape2);
+	return sqrt((distancex * distancex) + (distancey * distancey) + (distancez * distancez));
+}
+
+vector<GLfloat> newVertPositions(Shapes shape) {
+	vector<GLfloat> newPositions;
+	for (unsigned int i = 0; i < shape.vertexPositions.size(); i += 3) {
+		glm::vec3 vec = glm::vec3(shape.vertexPositions[i], shape.vertexPositions[i + 1], shape.vertexPositions[i + 2]);
+		glm::mat4 vertexInWorldPosition =  shape.w_matrix * glm::translate(vec) * glm::mat4(1.0f);
+		newPositions.push_back(vertexInWorldPosition[3][0]);
+		newPositions.push_back(vertexInWorldPosition[3][1]);
+		newPositions.push_back(vertexInWorldPosition[3][2]);
+	}
+	//cout << shape.vertexPositions.size() << "unmoved\n";
+	return newPositions;
+}
+bool isCollidingXYZ(float Distance, vector<GLfloat> shape1VertPos, vector<GLfloat> shape2VertPos, XYZ xyz) {
+	float shape1Pos;
+	float shape2Pos;
+	if (Distance < 0) {
+		//max in x for shape 1 min in x for shape2
+		shape1Pos = 1 - numeric_limits<float>::max();
+		shape2Pos = numeric_limits<float>::max();
+		for (unsigned int i = 0; i < shape1VertPos.size(); i += 3) {
+			if (shape1VertPos[i + (int)xyz] > shape1Pos) {
+				shape1Pos = shape1VertPos[i + (int)xyz];
+			}
+		}
+
+		for (unsigned int i = 0; i < shape2VertPos.size(); i += 3) {
+			if (shape2VertPos[i + (int)xyz] < shape2Pos) {
+				shape2Pos = shape2VertPos[i + (int)xyz];
+			}
+		}
+
+		if (shape1Pos > shape2Pos) {
+			return true;
+		}
+	}
+	else {
+		//max in x for shape 2 min in x for shape1
+		shape1Pos = numeric_limits<float>::max();
+		shape2Pos = 1 - numeric_limits<float>::max();
+		for (unsigned int i = 0; i < shape1VertPos.size(); i += 3) {
+			if (shape1VertPos[i + (int)xyz] < shape1Pos) {
+				shape1Pos = shape1VertPos[i + (int)xyz];
+			}
+		}
+
+		for (unsigned int i = 0; i < shape2VertPos.size(); i += 3) {
+			if (shape2VertPos[i + (int)xyz] > shape2Pos) {
+				shape2Pos = shape2VertPos[i + (int)xyz];
+			}
+		}
+
+		if (shape1Pos < shape2Pos) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+float getDistanceBetweenCenters(Shapes shape1, glm::vec3 point2){
+	float distancex = getXDistanceBetweenCenters(shape1, point2);
+	float distancey = getYDistanceBetweenCenters(shape1, point2);
+	float distancez = getZDistanceBetweenCenters(shape1, point2);
+	return sqrt((distancex * distancex) + (distancey * distancey) + (distancez * distancez));
+}
+
+bool cubeSphereCollision(Shapes sphere1, Shapes cube1) {
+	
+	vector<GLfloat> shape2VertPos = newVertPositions(cube1);
+	float radias = 0.5f;
+	
+	float mindist = numeric_limits<float>::max();
+	
+	for (unsigned int i = 0; i < shape2VertPos.size(); i += 3) {
+		glm::vec3 position = glm::vec3(shape2VertPos[i], shape2VertPos[i+1], shape2VertPos[i+2]);
+		float dist = getDistanceBetweenCenters(sphere1, position);
+		if (dist < mindist) {
+			mindist = dist;
+			
+			
+		}
+	}
+	cout << mindist << " ";
+	if (mindist - radias <= 0) {
+		return true;
+	}
+	
+	return false;
+
+	
+
 }
 
 bool isColliding(Shapes shape1, Shapes shape2) 
 {
-	float distBetween = getDistanceBetweenCenters(shape1, shape2);
-	if (distBetween < 2)
-	{
-		return true;
+	if (shape1.collision_type == sphere && shape2.collision_type == sphere) {
+		float distBetween = getDistanceBetweenCenters(shape1, shape2);
+		if (distBetween < 1)//curently assumes radius of 0.5
+		{
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
-	else {
+	else if (shape1.collision_type == cube && shape2.collision_type == cube) {
+		
+		vector<GLfloat> shape1VertPos = newVertPositions(shape1);
+		vector<GLfloat> shape2VertPos = newVertPositions(shape2);
+
+		float Dist = getXDistanceBetweenCenters(shape1, shape2);
+		
+		if (isCollidingXYZ(Dist, shape1VertPos, shape2VertPos, x) == true) {
+		
+			Dist = getYDistanceBetweenCenters(shape1, shape2);
+			if (isCollidingXYZ(Dist, shape1VertPos, shape2VertPos, y) == true) {
+				Dist = getZDistanceBetweenCenters(shape1, shape2);
+				if (isCollidingXYZ(Dist, shape1VertPos, shape2VertPos, z) == true) {
+					return true;
+				}
+			}
+		}
 		return false;
 	}
+	else if (shape1.collision_type == sphere && shape2.collision_type == cube) {
+		return cubeSphereCollision(shape1, shape2);
+
+	}
+	else if (shape2.collision_type == sphere && shape1.collision_type == cube) {
+		return cubeSphereCollision(shape2, shape1);
+
+	}
+	return false;
 
 }
 void checkCollisions() {
 	//Itteration for allShapes
+	bool colliding = isColliding( myCube, mySphere);
+	cout << colliding << "\n";
+	
+	/*
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		for (int j = 0; j < allShapes.size(); j++)
@@ -178,6 +347,7 @@ void checkCollisions() {
 			}
 		}
 	}
+	*/
 }
 void startup() {
 	// Keep track of the running time
@@ -199,7 +369,11 @@ void startup() {
 
 	// Load Geometry examples
 	myCube.Load();
+	myCube.collision_type = cube;
 	allShapes.push_back(myCube);
+	myCube2.Load();
+	myCube2.collision_type = cube;
+	allShapes.push_back(myCube2);
 
 	mySphere.Load();
 	allShapes.push_back(mySphere);
@@ -290,8 +464,15 @@ void updateSceneElements() {
 	myCube.mv_matrix = myGraphics.viewMatrix * myCube.w_matrix;
 	myCube.proj_matrix = myGraphics.proj_matrix;
 
+	myCube2.w_matrix =
+		glm::translate(glm::vec3(-2.0f, 2.5f, 0.0f)) * 
+		glm::rotate(glm::radians(-40.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
+		glm::mat4(1.0f);
+	myCube2.mv_matrix = myGraphics.viewMatrix * myCube2.w_matrix;
+	myCube2.proj_matrix = myGraphics.proj_matrix;
+
 	// calculate Sphere movement
-	mySphere.w_matrix = glm::translate(glm::vec3(-2.0f, 0.5f, 0.0f)) *
+	mySphere.w_matrix = glm::translate(glm::vec3(-2.0f, 0.5f, 0.5f)) *
 		glm::rotate(-t, glm::vec3(0.0f, 1.0f, 0.0f)) *
 		glm::rotate(-t, glm::vec3(1.0f, 0.0f, 0.0f)) *
 		glm::mat4(1.0f);
@@ -365,6 +546,7 @@ void renderScene() {
 	// Draw objects in screen
 	myFloor.Draw();
 	myCube.Draw();
+	myCube2.Draw();
 	mySphere.Draw();
 
 	arrowX.Draw();
