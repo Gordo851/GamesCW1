@@ -38,6 +38,7 @@ void updateCamera();
 void updateSceneElements();
 void renderScene();
 void physicsEffects();
+
 // CALLBACK FUNCTIONS
 void onResizeCallback(GLFWwindow* window, int w, int h);
 void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -69,7 +70,6 @@ Cylinder    myCylinder;
 vector<Shapes*> allShapes;
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
-glm::vec3 Translation = glm::vec3(1.0f, 1.0f, 1.0f);
 
 
 float cx = 2.0f;
@@ -163,7 +163,6 @@ void physicsEffects()
 		shape1.oldSpeed = shape1.newSpeed;
 	}
 }
-
 
 /**
 get the objects X position
@@ -682,9 +681,7 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 	if (keyStatus[GLFW_KEY_K] == true) {
 		glm::vec3 force = glm::vec3(0.0f, 0.0f, -0.1f);
 		ApplyForce(myCube, force);
-		cy -= 0.05;
 	}
-
 	if (keyStatus[GLFW_KEY_O] == true) {
 		glm::vec3 force = glm::vec3(0.0f, 0.1f, 0.0f);
 		ApplyForce(myCube, force);
@@ -693,8 +690,9 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 	if (keyStatus[GLFW_KEY_U] == true) {
 		glm::vec3 force = glm::vec3(0.0f, -0.1f, 0.0f);
 		ApplyForce(myCube, force);
-		cz -= 0.05;
+
 	}
+
 	// toggle showing mouse.
 	if (keyStatus[GLFW_KEY_M]) {
 		mouseEnabled = !mouseEnabled;
