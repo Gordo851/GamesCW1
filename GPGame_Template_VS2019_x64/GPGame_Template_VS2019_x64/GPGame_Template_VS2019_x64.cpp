@@ -37,7 +37,7 @@ void startup();
 void updateCamera();
 void updateSceneElements();
 void renderScene();
-
+void physicsEffects();
 // CALLBACK FUNCTIONS
 void onResizeCallback(GLFWwindow* window, int w, int h);
 void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -69,7 +69,7 @@ Cylinder    myCylinder;
 vector<Shapes*> allShapes;
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
-
+glm::vec3 Translation = glm::vec3(1.0f, 1.0f, 1.0f);
 
 
 float cx = 2.0f;
@@ -88,6 +88,7 @@ int main()
 	// MAIN LOOP run until the window is closed
 	while (!quit) {
 
+		physicsEffects();
 		// Update the camera transform based on interactive inputs or by following a predifined path.
 		updateCamera();
 
@@ -96,7 +97,6 @@ int main()
 
 		// Render a still frame into an off-screen frame buffer known as the backbuffer.
 		renderScene();
-
 		// Swap the back buffer with the front buffer, making the most recently rendered image visible on-screen.
 		glfwSwapBuffers(myGraphics.window);        // swap buffers (avoid flickering and tearing)
 
@@ -143,6 +143,27 @@ int main()
 	
 	return 0;
 }
+
+void ApplyForce(Shapes& shape, glm::vec3 force)
+{
+	float accelerationX = force[0] / shape.mass;
+	float accelerationY = force[1] / shape.mass;
+	float accelerationZ = force[2] / shape.mass;
+	glm::vec3 Velocity = glm::vec3(accelerationX, accelerationY, accelerationZ);
+	shape.linearMovement = shape.linearMovement + Velocity;
+	shape.velocity = shape.velocity + Velocity;
+}
+
+void physicsEffects()
+{
+	for (int i = 0; i < allShapes.size(); i++)
+	{
+		Shapes& shape1 = *allShapes[i];
+		shape1.newSpeed = shape1.oldSpeed + shape1.velocity;
+		shape1.oldSpeed = shape1.newSpeed;
+	}
+}
+
 
 /**
 get the objects X position
@@ -278,6 +299,7 @@ bool isCollidingXYZ(float Distance, vector<GLfloat> shape1VertPos, vector<GLfloa
 }
 
 
+
 /**
 check if sphere and cube are colliding - called from iscolliding()
 */
@@ -288,7 +310,8 @@ bool cubeSphereCollision(Shapes sphere1, Shapes cube1) {
 	shape1VertPos.push_back(getX(sphere1));
 	shape1VertPos.push_back(getY(sphere1));
 	shape1VertPos.push_back(getZ(sphere1));
-	float radias = 0.5f;///////////////
+	float radius = sphere1.radius;///////////////
+	
 	//cout << shape1VertPos[0] << " " << shape1VertPos[1] << " " << shape1VertPos[2] << "\n";
 	float distX = getXDistanceBetweenCenters(sphere1, cube1);
 	float distY = getYDistanceBetweenCenters(sphere1, cube1);
@@ -296,11 +319,11 @@ bool cubeSphereCollision(Shapes sphere1, Shapes cube1) {
 	
 	float alpha = atan2(abs(distX), abs(distY));
 	
-	float X = radias * sin(alpha);
-	float Y = radias * cos(alpha);
+	float X = radius * sin(alpha);
+	float Y = radius * cos(alpha);
 
 	float alpha2 = atan2(abs(distX), abs(distZ));
-	float Z = radias * cos(alpha2);
+	float Z = radius * cos(alpha2);
 	if (distX < 0) {
 		//max in x for shape 1 min in x for shape2
 		shape1VertPos[0] += X;
@@ -348,7 +371,8 @@ bool isColliding(Shapes shape1, Shapes shape2)
 {
 	if (shape1.collision_type == sphere && shape2.collision_type == sphere) {
 		float distBetween = getDistanceBetweenCenters(shape1, shape2);
-		if (distBetween < 1)//curently assumes radius of 0.5
+		float radius = shape1.radius + shape2.radius;
+		if (distBetween < radius)
 		{
 			return true;
 		}
@@ -525,10 +549,9 @@ void updateSceneElements() {
 	lastTime = currentTime;                            // Save for next frame calculations.
 
 	// Do not forget your ( T * R * S ) http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
-
 	// Calculate Cube position
 	myCube.w_matrix = 
-		glm::translate(glm::vec3(cx, cy, cz)) *
+		glm::translate(glm::vec3(2.0f, 0.0f, 0.0f)+myCube.newSpeed) *
 		glm::mat4(1.0f);
 	myCube.mv_matrix = myGraphics.viewMatrix * myCube.w_matrix;
 	myCube.proj_matrix = myGraphics.proj_matrix;
@@ -581,10 +604,12 @@ void updateSceneElements() {
 		glm::mat4(1.0f);
 	myFloor.proj_matrix = myGraphics.proj_matrix;
 
-	// Calculate cylinder
+	// Calculate cylinder 
 	myCylinder.w_matrix = glm::translate(glm::vec3(0.0f, 0.0f, -1.5f)) *
 		glm::mat4(1.0f);
 	myCylinder.mv_matrix = myGraphics.viewMatrix * myCylinder.w_matrix;
+		
+	myCylinder.proj_matrix = myGraphics.proj_matrix;
 
 	// Calculate Line
 	myLine.mv_matrix = myGraphics.viewMatrix *
@@ -641,23 +666,33 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 	if (action == GLFW_PRESS) keyStatus[key] = true;
 	else if (action == GLFW_RELEASE) keyStatus[key] = false;
 	if (keyStatus[GLFW_KEY_J] == true) {
-		cx += 0.05;
+		glm::vec3 force = glm::vec3(0.1f, 0.0f, 0.0f);
+		ApplyForce(myCube, force);
 	}
 	if (keyStatus[GLFW_KEY_L] == true) {
-		cx -= 0.05;
+		glm::vec3 force = glm::vec3(-0.1f, 0.0f, 0.0f);
+		ApplyForce(myCube, force);
 	}
 
 	if (keyStatus[GLFW_KEY_I] == true) {
+		glm::vec3 force = glm::vec3(0.0f, 0.0f, 0.1f);
+		ApplyForce(myCube, force);
 		cy += 0.05;
 	}
 	if (keyStatus[GLFW_KEY_K] == true) {
+		glm::vec3 force = glm::vec3(0.0f, 0.0f, -0.1f);
+		ApplyForce(myCube, force);
 		cy -= 0.05;
 	}
 
 	if (keyStatus[GLFW_KEY_O] == true) {
+		glm::vec3 force = glm::vec3(0.0f, 0.1f, 0.0f);
+		ApplyForce(myCube, force);
 		cz += 0.05;
 	}
-	if (keyStatus[GLFW_KEY_P] == true) {
+	if (keyStatus[GLFW_KEY_U] == true) {
+		glm::vec3 force = glm::vec3(0.0f, -0.1f, 0.0f);
+		ApplyForce(myCube, force);
 		cz -= 0.05;
 	}
 	// toggle showing mouse.
