@@ -38,6 +38,13 @@ void updateCamera();
 void updateSceneElements();
 void renderScene();
 void physicsEffects();
+void calculateRebound(Shapes& shape1, Shapes& shape2);
+void newVertPositions(Shapes& shape);
+float getXDistanceBetweenCenters(Shapes shape1, Shapes shape2);
+float getYDistanceBetweenCenters(Shapes shape1, Shapes shape2);
+float getZDistanceBetweenCenters(Shapes shape1, Shapes shape2);
+bool isCollidingXYZ(float Distance, vector<GLfloat> shape1VertPos, vector<GLfloat> shape2VertPos, XYZ xyz);
+float getSquareDistanceBetweenCenters(Shapes shape1, Shapes shape2);
 
 // CALLBACK FUNCTIONS
 void onResizeCallback(GLFWwindow* window, int w, int h);
@@ -66,6 +73,8 @@ Arrow       arrowZ;
 Cube        myFloor;
 Line        myLine;
 Cylinder    myCylinder;
+Cube  cubeArray[6][10];
+Cube  cubeArray2[6][10];
 
 vector<Shapes*> allShapes;
 // Some global variable to do the animation.
@@ -75,6 +84,8 @@ float t = 0.001f;            // Global variable for animation
 float cx = 2.0f;
 float cy = 0.5f;
 float cz = 0.0f;
+
+glm::vec3 collisionPoint;
 
 int main()
 {
@@ -88,7 +99,7 @@ int main()
 	// MAIN LOOP run until the window is closed
 	while (!quit) {
 
-		physicsEffects();
+		
 		// Update the camera transform based on interactive inputs or by following a predifined path.
 		updateCamera();
 
@@ -107,7 +118,7 @@ int main()
 
    // cout << "\nPress any key to continue...\n";
    // cin.ignore(); cin.get(); // delay closing console to read debugging errors.
-	cout << "here\n";
+	std::cout << "here\n";
 
 	float cubex = getX(myCube);
 	float cubey = getY(myCube);
@@ -117,11 +128,11 @@ int main()
 	float spherez = getZ(mySphere);
 
 	float cubesphere = getDistanceBetweenCenters(myCube, mySphere);
-	cout << "\n" << cubesphere;
+	std::cout << "\n" << cubesphere;
 	float cubesphere1 = getDistanceBetweenCenters(myCube, myCylinder);
-	cout << "\n" << cubesphere1;
+	std::cout << "\n" << cubesphere1;
 	float cubesphere2 = getDistanceBetweenCenters(myCylinder, mySphere);
-	cout << "\n" << cubesphere2;
+	std::cout << "\n" << cubesphere2;
 
 	/*
 	cout << "here2  \n";
@@ -150,7 +161,8 @@ void ApplyForce(Shapes& shape, glm::vec3 force)
 	float accelerationY = force[1] / shape.mass;
 	float accelerationZ = force[2] / shape.mass;
 	glm::vec3 Velocity = glm::vec3(accelerationX, accelerationY, accelerationZ);
-	shape.linearMovement = shape.linearMovement + Velocity;
+	//cout << "\nvel speed" << Velocity[0] << " " << Velocity[1] << " " << Velocity[2];
+	//shape.linearMovement = shape.linearMovement + Velocity;
 	shape.velocity = shape.velocity + Velocity;
 }
 
@@ -159,9 +171,179 @@ void physicsEffects()
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		Shapes& shape1 = *allShapes[i];
-		shape1.newSpeed = shape1.oldSpeed + shape1.velocity;
+		shape1.newSpeed = shape1.oldSpeed + shape1.velocity;//change ?
 		shape1.oldSpeed = shape1.newSpeed;
 	}
+}
+
+void calculateGroundRebound(Shapes& shape1) {
+	float e = 0.8;
+	glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::vec3 phat = (e + 1.0f) * shape1.mass * (shape1.velocity * normal) * normal;
+	shape1.velocity = shape1.velocity + (((-phat) / shape1.mass));
+	//std::cout << "ground rebound \n";
+}
+
+void calculateRebound(Shapes& shape1, Shapes& shape2) {
+	//calcualte side of collision
+
+	glm::vec3 normal = glm::vec3(0.0f, 0.0f, 0.0f);
+
+	//float radiusDiff = shape1.radius / shape2.radius;
+
+	if (shape1.collision_type == sphere || shape2.collision_type == sphere) {
+		//cout << "sphere\n";
+		float dist = getDistanceBetweenCenters(shape1, shape2);
+		float distX = getXDistanceBetweenCenters(shape1, shape2);
+		float distY = getYDistanceBetweenCenters(shape1, shape2);
+		float distZ = getZDistanceBetweenCenters(shape1, shape2);
+
+		normal = glm::vec3(distX / dist, distY / dist, distZ / dist);
+		//cout << normal[0] << " " << normal[1] << " " << normal[2] <<"sphere\n";
+	}
+	//else if (shape2.collision_type == cube && radiusDiff > 0.8 && radiusDiff < 1.2) {
+
+	//	float dist = getDistanceBetweenCenters(shape1, shape2);
+	//	float distX = getXDistanceBetweenCenters(shape1, shape2);
+	//	float distY = getYDistanceBetweenCenters(shape1, shape2);
+	//	float distZ = getZDistanceBetweenCenters(shape1, shape2);
+
+	//	normal = glm::vec3(distX / dist, distY / dist, distZ / dist);
+	//	cout << "same\n";
+	//}
+	else if (shape2.collision_type == cube){
+		//cout << "diff\n";
+		vector<GLfloat> shape2VertPos = shape2.currentVertexPositions;
+		vector<GLfloat> shape1VertPos = shape1.currentVertexPositions;
+
+
+			float shape2PosMaxX = 1 - numeric_limits<float>::max();
+			float shape2PosMinX = numeric_limits<float>::max();
+
+			float shape2PosMaxY = 1 - numeric_limits<float>::max();
+			float shape2PosMinY = numeric_limits<float>::max();
+
+			float shape2PosMaxZ = 1 - numeric_limits<float>::max();
+			float shape2PosMinZ = numeric_limits<float>::max();
+
+			for (unsigned int i = 0; i < shape2VertPos.size(); i += 3) {
+				if (shape2VertPos[i + 0] > shape2PosMaxX) {
+					shape2PosMaxX = shape2VertPos[i + 0];
+				}
+
+				if (shape2VertPos[i + 0] < shape2PosMinX) {
+					shape2PosMinX = shape2VertPos[i + 0];
+				}
+
+				if (shape2VertPos[i + 1] > shape2PosMaxY) {
+					shape2PosMaxY = shape2VertPos[i + 1];
+				}
+				if (shape2VertPos[i + 1] < shape2PosMinY) {
+					shape2PosMinY = shape2VertPos[i + 1];
+				}
+
+				if (shape2VertPos[i + 2] > shape2PosMaxZ) {
+					shape2PosMaxZ = shape2VertPos[i + 2];
+				}
+				if (shape2VertPos[i + 2] < shape2PosMinZ) {
+					shape2PosMinZ = shape2VertPos[i + 2];
+				}
+			}
+
+			float maxDistX = abs((collisionPoint[0] - shape2PosMaxX));
+			float minDistX = abs((collisionPoint[0] - shape2PosMinX));
+			float maxDistY = abs((collisionPoint[1] - shape2PosMaxY));
+			float minDistY = abs((collisionPoint[1] - shape2PosMinY));
+			float maxDistZ = abs((collisionPoint[2] - shape2PosMaxZ));
+			float minDistZ = abs((collisionPoint[2] - shape2PosMinZ));
+
+			float minDist = 100.0f;
+			if (maxDistX < minDistX) {
+				normal = glm::vec3(0.0f, 0.0f, 0.0f);
+				normal[0] = 1.0f;
+				minDist = maxDistX;
+			}
+			else {
+				normal = glm::vec3(0.0f, 0.0f, 0.0f);
+				normal[0] = -1.0f;
+				minDist = minDistX;
+			}
+			if (maxDistY < minDist || minDistY < minDist){
+				if (maxDistY < minDistY) {
+
+					normal = glm::vec3(0.0f, 0.0f, 0.0f);
+					normal[1] = 1.0f;
+					minDist = maxDistY;
+				}
+				else {
+					normal = glm::vec3(0.0f, 0.0f, 0.0f);
+					normal[1] = -1.0f;
+					minDist = minDistY;
+				}
+			}
+
+			if (maxDistZ < minDist || minDistZ < minDist) {
+				if (maxDistZ < minDistZ) {
+
+					normal = glm::vec3(0.0f, 0.0f, 0.0f);
+					normal[2] = 1.0f;
+				}
+				else {
+					normal = glm::vec3(0.0f, 0.0f, 0.0f);
+					normal[2] = -1.0f;
+				}
+			}
+		
+	}
+	
+
+	float e = 0.8f;
+
+	if (shape2.mass == 0) {//shape 2 static
+		glm::vec3 phat = (e + 1.0f) * shape1.mass * (shape1.velocity * normal) * normal;
+		shape1.velocity = shape1.velocity + (((-phat) / shape1.mass));
+		//std::cout << "shape 2 static \n";
+	}
+	else if (shape1.mass == 0) {//shape 1 static
+		glm::vec3 phat = (e + 1.0f) * shape2.mass * (shape2.velocity * normal) * normal;
+		shape2.velocity = shape2.velocity + (((phat) / shape2.mass));
+		//std::cout << "shape 1 static \n";
+	}
+	else {
+		glm::vec3 phat = (((e + 1.0f) * (shape1.velocity * normal - shape2.velocity * normal)) / ((1.0f / shape2.mass) + (1.0f / shape1.mass))) * normal;
+
+		shape1.velocity = shape1.velocity + (((-phat) / shape1.mass));
+		shape2.velocity = shape2.velocity + (((phat) / shape2.mass));
+		//shape1.velocity = shape1.velocity + 2.0f * ((-shape1.velocity) * normal);
+	}
+
+	if (normal[1] > 0 && shape1.mass != 0) {
+		float force = 0.1 * shape1.mass * normal[1];
+		ApplyForce(shape1, glm::vec3(0.0f, force, 0.0f));
+	}
+	if (normal[1] < 0 && shape2.mass != 0) {
+		float force = -0.1 * shape2.mass * normal[1];
+		ApplyForce(shape2, glm::vec3(0.0f, force, 0.0f));
+	}
+	
+	if (normal[0] > 0 && shape1.mass != 0) {
+		float force = 0.1 * shape1.mass * normal[0];
+		ApplyForce(shape1, glm::vec3(0.0f, force, 0.0f));
+	}
+	if (normal[0] < 0 && shape2.mass != 0) {
+		float force = -0.1 * shape2.mass * normal[0];
+		ApplyForce(shape2, glm::vec3(0.0f, force, 0.0f));
+	}
+	if (normal[2] > 0 && shape1.mass != 0) {
+		float force = 0.1 * shape1.mass * normal[2];
+		ApplyForce(shape1, glm::vec3(0.0f, force, 0.0f));
+	}
+	if (normal[2] < 0 && shape2.mass != 0) {
+		float force = -0.1 * shape2.mass * normal[2];
+		ApplyForce(shape2, glm::vec3(0.0f, force, 0.0f));
+	}
+	
+
 }
 
 /**
@@ -186,6 +368,30 @@ get the objects Z position
 float getZ(Shapes shape) {
 	
 	float z_location = shape.w_matrix[3][2];
+	return z_location;
+}
+/**
+get the objects X position
+*/
+float getoldX(Shapes shape) {
+
+	float x_location = shape.w_matrix_old[3][0];
+	return x_location;
+}
+/**
+get the objects Y position
+*/
+float getoldY(Shapes shape) {
+
+	float y_location = shape.w_matrix_old[3][1];
+	return y_location;
+}
+/**
+get the objects Z position
+*/
+float getoldZ(Shapes shape) {
+
+	float z_location = shape.w_matrix_old[3][2];
 	return z_location;
 }
 /**
@@ -220,6 +426,34 @@ float getZDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
 	return shape1z - shape2z;
 }
 
+float getOldYDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
+
+	float shape1y = getoldY(shape1);
+	float shape2y = getoldY(shape2);
+	return shape1y - shape2y;
+
+
+}
+
+/**
+get the distance in the X axis between the centers of two objects
+*/
+float getOldXDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
+
+	float shape1x = getoldX(shape1);
+	float shape2x = getoldX(shape2);
+	return shape1x - shape2x;
+}
+
+/**
+get the distance in the Z axis between the centers of two objects
+*/
+float getOldZDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
+
+	float shape1z = getoldZ(shape1);
+	float shape2z = getoldZ(shape2);
+	return shape1z - shape2z;
+}
 
 /**
 get the shortest distance between the centers of two objects
@@ -231,26 +465,44 @@ float getDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
 	return sqrt((distancex * distancex) + (distancey * distancey) + (distancez * distancez));
 }
 
+float getOldSquareDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
+	float distancex = getOldXDistanceBetweenCenters(shape1, shape2);
+	float distancey = getOldYDistanceBetweenCenters(shape1, shape2);
+	float distancez = getOldZDistanceBetweenCenters(shape1, shape2);
+	return (distancex * distancex) + (distancey * distancey) + (distancez * distancez);
+}
+
+float getSquareDistanceBetweenCenters(Shapes shape1, Shapes shape2) {
+	float distancex = getXDistanceBetweenCenters(shape1, shape2);
+	float distancey = getYDistanceBetweenCenters(shape1, shape2);
+	float distancez = getZDistanceBetweenCenters(shape1, shape2);
+	return (distancex * distancex) + (distancey * distancey) + (distancez * distancez);
+}
+
 /**
 calculate an objects vertex positions in the world view
 */
-vector<GLfloat> newVertPositions(Shapes shape) {
+void newVertPositions(Shapes& shape) {
 	vector<GLfloat> newPositions;
 	for (unsigned int i = 0; i < shape.vertexPositions.size(); i += 3) {
 		glm::vec3 vec = glm::vec3(shape.vertexPositions[i], shape.vertexPositions[i + 1], shape.vertexPositions[i + 2]);
-		glm::mat4 vertexInWorldPosition =  shape.w_matrix * glm::translate(vec) * glm::mat4(1.0f);
+		glm::mat4 vertexInWorldPosition = shape.w_matrix * glm::translate(vec) * glm::mat4(1.0f);
 		newPositions.push_back(vertexInWorldPosition[3][0]);
 		newPositions.push_back(vertexInWorldPosition[3][1]);
 		newPositions.push_back(vertexInWorldPosition[3][2]);
 	}
 	//cout << shape.vertexPositions.size() << "unmoved\n";
-	return newPositions;
+	shape.currentVertexPositions = newPositions;
+
 }
+
+
 
 /**
 calculate of an object is colliding in the x, y , or z axis ( set xyz to x, y ,or z for the required axis)
 */
 bool isCollidingXYZ(float Distance, vector<GLfloat> shape1VertPos, vector<GLfloat> shape2VertPos, XYZ xyz) {
+	
 	float shape1Pos;
 	float shape2Pos;
 	if (Distance < 0) {
@@ -269,7 +521,8 @@ bool isCollidingXYZ(float Distance, vector<GLfloat> shape1VertPos, vector<GLfloa
 			}
 		}
 
-		if (shape1Pos > shape2Pos) {
+		if (shape1Pos >= shape2Pos) {
+			collisionPoint[xyz] = (shape1Pos + shape2Pos) / 2;
 			return true;
 		}
 	}
@@ -289,7 +542,8 @@ bool isCollidingXYZ(float Distance, vector<GLfloat> shape1VertPos, vector<GLfloa
 			}
 		}
 
-		if (shape1Pos < shape2Pos) {
+		if (shape1Pos <= shape2Pos) {
+			collisionPoint[xyz] = (shape1Pos + shape2Pos) / 2;
 			return true;
 		}
 	}
@@ -304,7 +558,7 @@ check if sphere and cube are colliding - called from iscolliding()
 */
 bool cubeSphereCollision(Shapes sphere1, Shapes cube1) {
 	
-	vector<GLfloat> shape2VertPos = newVertPositions(cube1);
+	vector<GLfloat> shape2VertPos = cube1.currentVertexPositions;
 	vector<GLfloat> shape1VertPos;
 	shape1VertPos.push_back(getX(sphere1));
 	shape1VertPos.push_back(getY(sphere1));
@@ -368,9 +622,20 @@ bool cubeSphereCollision(Shapes sphere1, Shapes cube1) {
 //check if two objects are colliding
 bool isColliding(Shapes shape1, Shapes shape2) 
 {
+	
+	if (shape1.collision_type == none || shape2.collision_type == none) {
+		return false;
+	}
+
+	if ((((shape1.radius + shape2.radius) * 1.5f)* ((shape1.radius + shape2.radius) * 1.5f)) < (getSquareDistanceBetweenCenters(shape1, shape2))) {//stop complicated calcs if not near object
+		return false;
+	}
+
+
 	if (shape1.collision_type == sphere && shape2.collision_type == sphere) {
-		float distBetween = getDistanceBetweenCenters(shape1, shape2);
+		float distBetween = getSquareDistanceBetweenCenters(shape1, shape2);
 		float radius = shape1.radius + shape2.radius;
+		radius = radius * radius;
 		if (distBetween < radius)
 		{
 			return true;
@@ -380,9 +645,11 @@ bool isColliding(Shapes shape1, Shapes shape2)
 		}
 	}
 	else if (shape1.collision_type == cube && shape2.collision_type == cube) {
+
 		
-		vector<GLfloat> shape1VertPos = newVertPositions(shape1);
-		vector<GLfloat> shape2VertPos = newVertPositions(shape2);
+		
+		vector<GLfloat> shape1VertPos = shape1.currentVertexPositions;
+		vector<GLfloat> shape2VertPos = shape2.currentVertexPositions;
 
 		float Dist = getXDistanceBetweenCenters(shape1, shape2);
 		
@@ -409,35 +676,94 @@ bool isColliding(Shapes shape1, Shapes shape2)
 	return false;
 
 }
+
+bool isGroundColliding(Shapes shape1) {
+	vector<GLfloat> shape1VertPos = shape1.currentVertexPositions;
+	float shape1Pos = numeric_limits<float>::max();
+	for (unsigned int i = 0; i < shape1VertPos.size(); i += 3) {//calc lowest point in object
+		if (shape1VertPos[i + 1] < shape1Pos) {
+			shape1Pos = shape1VertPos[i + 1];
+		}
+	}
+
+	if (shape1Pos <= 0.0f) {
+		return true;
+	}
+	return false;
+	
+}
+
 void checkCollisions()
 {
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		Shapes& shape1 = *allShapes[i];
-		shape1.fillColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+		//shape1.fillColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+		if (shape1.mass != 0) {
+			newVertPositions(shape1);//calcaute here to prevent repeated calculation
 
+			bool hitground = isGroundColliding(shape1);
+			if (hitground == true) {
+				//std::cout << "ground hit \n";
+				if (shape1.onGround == false) {
+					calculateGroundRebound(shape1);
+				}
+				//calculateGroundRebound(shape1);
+				shape1.onGround = true;
+
+			}
+			else {
+
+				shape1.onGround = false;
+				//ApplyForce(shape1, glm::vec3(0.0f, -0.1f * shape1.mass, 0.0f));
+				
+			}
+			
+		}
 	}
-
+	
 	//Itteration for allShapes
 	for (int i = 0; i < allShapes.size(); i++)
 	{
-		for (int j = 0; j < allShapes.size(); j++)
+		for (int j = i +1 ; j < allShapes.size(); j++)
 		{
 			if (i != j)
 			{
 				Shapes& shape1 = *allShapes[i];
 				Shapes& shape2 = *allShapes[j];
-				bool colliding = isColliding(shape1, shape2);
-				if (colliding == true)
-				{
-					shape1.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-					shape2.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+				if (shape1.mass == 0 && shape2.mass == 0) {//both object static do not need to calculate
+
 				}
+				else {
+					bool colliding = isColliding(shape1, shape2);
+					if (colliding == true)
+					{
 
+						//cout << collisionPoint[0] << " " << collisionPoint[1] << " " << collisionPoint[2] << ":collision point \n";
+						//shape1.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+						//shape2.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+						if (getSquareDistanceBetweenCenters(shape1, shape2) <= getOldSquareDistanceBetweenCenters(shape1, shape2)) {
+							calculateRebound(shape1, shape2);
+						}
 
+						
+						
+					}
+
+				}
+				
 			}
 		}
 	}
+	for (int i = 0; i < allShapes.size(); i++)//apply gravity
+	{
+		Shapes& shape1 = *allShapes[i];
+		if (shape1.onGround == false  && shape1.mass != 0  ) {
+			ApplyForce(shape1, glm::vec3(0.0f, -0.1f * shape1.mass, 0.0f));
+		}
+
+	}
+	
 }
 void startup() {
 	// Keep track of the running time
@@ -458,15 +784,50 @@ void startup() {
 	myGraphics.proj_matrix = glm::perspective(glm::radians(50.0f), myGraphics.aspect, 0.1f, 1000.0f);
 
 	// Load Geometry examples
+
+	
 	
 	myCube.Load();
-	myCube.collision_type = cube;
+    myCube.collision_type = cube;
+	myCube.w_matrix = 
+		glm::translate(glm::vec3(-4.0f, 8.0f, 4.0f)) *
+		glm::mat4(1.0f);
+	myCube.mass = 1;
+	myCube.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	allShapes.push_back(&myCube);
-	myCube2.Load();
-	myCube2.collision_type = cube;
-	allShapes.push_back(&myCube2);
 
+
+	myCube2.Load();
+	myCube2.mass = 1.0f;
+	myCube2.w_matrix =
+		glm::translate(glm::vec3(-4.0f, 3.0f,4.0f)) *
+		glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)) *
+		glm::mat4(1.0f);
+	myCube2.collision_type = cube;
+	myCube2.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	allShapes.push_back(&myCube2);
+	myCube2.radius = myCube2.radius * 2;
+
+
+	for (int x = 0; x < 5; x +=1) {
+		for (int z = 0; z < 2; z +=1) {
+			
+			cubeArray[x][z].Load();
+			cubeArray[x][z].collision_type = cube;
+			cubeArray[x][z].mass = 1.0f;
+			cubeArray[x][z].w_matrix =
+				glm::translate(glm::vec3((2 + x * 1.2), 3.0f + z*4, 4.0f )) *
+				glm::mat4(1.0f);
+			cubeArray[x][z].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+			allShapes.push_back(&cubeArray[x][z]);
+		}
+	}
+	
 	mySphere.Load();
+	mySphere.w_matrix = glm::translate(glm::vec3(-2.0f, 5.0f, -3.0f)) *
+		glm::rotate(-t, glm::vec3(0.0f, 1.0f, 0.0f)) *
+		glm::rotate(-t, glm::vec3(1.0f, 0.0f, 0.0f)) *
+		glm::mat4(1.0f);
 	allShapes.push_back(&mySphere);
 	mySphere.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);    // You can change the shape fill colour, line colour or linewidth
 
@@ -475,12 +836,14 @@ void startup() {
 	arrowY.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); arrowY.lineColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 	arrowZ.fillColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); arrowZ.lineColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 
-	myFloor.Load();
-	myFloor.fillColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand Colour
-	myFloor.lineColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand again
+	
 
 	myCylinder.Load();
-	// myCylinder.collision_type = cube;
+	myCylinder.mass = 1.0f;
+	myCylinder.collision_type = cube;
+	myCylinder.w_matrix = glm::translate(glm::vec3(1.5f, 5.0f, 2.0f)) *
+		glm::mat4(1.0f);
+	
 	allShapes.push_back(&myCylinder);
 	myCylinder.fillColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
 	myCylinder.lineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -489,6 +852,26 @@ void startup() {
 	myLine.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	myLine.lineColor = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
 	myLine.lineWidth = 5.0f;
+
+	myFloor.Load();
+	myFloor.mass = 0.0f;
+	myFloor.collision_type = cube;
+	myFloor.w_matrix = glm::translate(glm::vec3(0.0f, -0.02f, 0.0f)) *
+		glm::scale(glm::vec3(1000.0f, 0.001f, 1000.0f)) *
+		glm::mat4(1.0f);
+	myFloor.fillColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand Colour
+	myFloor.lineColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand again
+	
+
+
+	///calculate starting vertex positions - mostly for static objects
+	for (int i = 0; i < allShapes.size(); i++)
+	{
+		Shapes& shape1 = *allShapes[i];
+		newVertPositions(shape1);//calcaute here to prevent repeated calculation
+		
+	}
+
 
 	// Optimised Graphics
 	myGraphics.SetOptimisations();        // Cull and depth testing
@@ -541,7 +924,7 @@ void updateCamera() {
 void updateSceneElements() {
 
 	glfwPollEvents();                                // poll callbacks
-
+	checkCollisions();
 	// Calculate frame time/period -- used for all (physics, animation, logic, etc).
 	GLfloat currentTime = (GLfloat)glfwGetTime();    // retrieve timelapse
 	deltaTime = currentTime - lastTime;                // Calculate delta time
@@ -549,11 +932,34 @@ void updateSceneElements() {
 
 	// Do not forget your ( T * R * S ) http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
 	// Calculate Cube position
-	myCube.w_matrix = 
-		glm::translate(glm::vec3(2.0f, 0.0f, 0.0f)+myCube.newSpeed) *
-		glm::mat4(1.0f);
+
+	for (int i = 0; i < allShapes.size(); i++)
+	{
+		Shapes& shape1 = *allShapes[i];
+		if (shape1.onGround == true && shape1.velocity[1] < 0.0f) {
+			shape1.velocity[1] = 0.0f;
+		}
+		shape1.w_matrix_old = shape1.w_matrix;
+		shape1.w_matrix = shape1.w_matrix * glm::translate(shape1.velocity / (1 / deltaTime)) * glm::mat4(1.0f);//added time
+		
+
+
+
+		shape1.mv_matrix = myGraphics.viewMatrix * shape1.w_matrix;
+		shape1.proj_matrix = myGraphics.proj_matrix;
+
+	}
+	/*
+	myCube.w_matrix = myCube.w_matrix * glm::translate(myCube.velocity/(1/deltaTime))* glm::mat4(1.0f);//added time
+	//std::cout << "vel" << myCube.velocity[0] << " " << myCube.velocity[1] << " " << myCube.velocity[2] << "\n";
 	myCube.mv_matrix = myGraphics.viewMatrix * myCube.w_matrix;
 	myCube.proj_matrix = myGraphics.proj_matrix;
+
+	// Calculate cylinder 
+	myCylinder.w_matrix = myCylinder.w_matrix * glm::translate(myCylinder.velocity / (1 / deltaTime)) * glm::mat4(1.0f);
+	myCylinder.mv_matrix = myGraphics.viewMatrix * myCylinder.w_matrix;
+
+	myCylinder.proj_matrix = myGraphics.proj_matrix;
 
 	myCube2.w_matrix =
 		glm::translate(glm::vec3(-2.0f, 2.5f, 1.5f)) * 
@@ -570,7 +976,7 @@ void updateSceneElements() {
 	mySphere.mv_matrix = myGraphics.viewMatrix * mySphere.w_matrix;
 	mySphere.proj_matrix = myGraphics.proj_matrix;
 
-
+	*/
 	//Calculate Arrows translations (note: arrow model points up)
 	glm::mat4 mv_matrix_x =
 		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
@@ -597,18 +1003,12 @@ void updateSceneElements() {
 	arrowZ.proj_matrix = myGraphics.proj_matrix;
 
 	// Calculate floor position and resize
-	myFloor.mv_matrix = myGraphics.viewMatrix *
-		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
-		glm::scale(glm::vec3(1000.0f, 0.001f, 1000.0f)) *
-		glm::mat4(1.0f);
+	
+	myFloor.mv_matrix = myGraphics.viewMatrix * myFloor.w_matrix;
+		
 	myFloor.proj_matrix = myGraphics.proj_matrix;
 
-	// Calculate cylinder 
-	myCylinder.w_matrix = glm::translate(glm::vec3(0.0f, 0.0f, -1.5f)) *
-		glm::mat4(1.0f);
-	myCylinder.mv_matrix = myGraphics.viewMatrix * myCylinder.w_matrix;
-		
-	myCylinder.proj_matrix = myGraphics.proj_matrix;
+	
 
 	// Calculate Line
 	myLine.mv_matrix = myGraphics.viewMatrix *
@@ -618,11 +1018,13 @@ void updateSceneElements() {
 
 
 	t += 0.01f; // increment movement variable
+	//physicsEffects();
+	
 
 
 	if (glfwWindowShouldClose(myGraphics.window) == GL_TRUE) quit = true; // If quit by pressing x on window.
 
-	checkCollisions();
+	
 
 
 
@@ -634,19 +1036,27 @@ void updateSceneElements() {
 void renderScene() {
 	// Clear viewport - start a new frame.
 	myGraphics.ClearViewport();
-
 	// Draw objects in screen
 	myFloor.Draw();
-	myCube.Draw();
-	myCube2.Draw();
-	mySphere.Draw();
+
+
+	for (int i = 0; i < allShapes.size(); i++)
+	{
+		Shapes& shape1 = *allShapes[i];
+		shape1.Draw();
+
+	}
+	
+	//myCube.Draw();
+	//myCube2.Draw();
+	//mySphere.Draw();
 
 	arrowX.Draw();
 	arrowY.Draw();
 	arrowZ.Draw();
 
 	myLine.Draw();
-	myCylinder.Draw();
+	//myCylinder.Draw();
 }
 
 

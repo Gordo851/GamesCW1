@@ -77,7 +77,7 @@ void Shapes::LoadObj() {
 		vertexPositions.push_back(obj_vertices[vertexIndices[i + 2] - 1].z);
 	}
 
-	
+	//calculate radius - the distance from the center to the firthest point of the object
 	float maxdistance = 0;
 	for (unsigned int i = 0; i < vertexPositions.size(); i += 3) {
 		float dis = 0;
