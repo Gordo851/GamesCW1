@@ -27,7 +27,8 @@ using namespace std;
 #include "graphics.h"
 #include "shapes.h"
 #include <limits>
-
+#include <cstdlib>
+#include <ctime>
 // MAIN FUNCTIONS
 float getDistanceBetweenCenters(Shapes shape1, Shapes shape2);
 float getX(Shapes shape);
@@ -75,8 +76,10 @@ Line        myLine;
 Cylinder    myCylinder;
 Cube  cubeArray[6][10];
 Cube  cubeArray2[6][10];
-
+Particle particle;
+Particle particleArray[20];
 vector<Shapes*> allShapes;
+vector<Particle*> allParticles;
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
 
@@ -84,14 +87,13 @@ float t = 0.001f;            // Global variable for animation
 float cx = 2.0f;
 float cy = 0.5f;
 float cz = 0.0f;
-
 glm::vec3 collisionPoint;
 
 int main()
 {
 	int errorGraphics = myGraphics.Init();			// Launch window and graphics context
 	if (errorGraphics) return 0;					// Close if something went wrong...
-
+	
 	startup();										// Setup all necessary information for startup (aka. load texture, shaders, models, etc).
 
 
@@ -765,6 +767,53 @@ void checkCollisions()
 	}
 	
 }
+
+void CreateParticles() {
+	
+	for (int x = 0; x < size(particleArray); x += 1) {
+		particleArray[x].Load();
+		particleArray[x].collision_type = sphere;
+		particleArray[x].w_matrix =
+			glm::translate(glm::vec3(x*0.1f, 1.0f, 1.0f)) *
+			glm::mat4(1.0f);
+		particleArray[x].mass = 0.5f;
+		particleArray[x].fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		allShapes.push_back(&particleArray[x]);
+		allParticles.push_back(&particleArray[x]);
+		
+	}
+	
+}
+void DestoryParticles(Particle& shape1) {
+	shape1.~Particle();
+}
+void MoveParticles() {
+	for (int i = 0; i < allParticles.size(); i++)
+	{
+		float MAX = 1.0f;
+		Particle& shape1 = *allParticles[i];
+		float x = -0.5f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / MAX));
+		float y = -0.5f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / MAX));
+		float z = -0.5f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / MAX));
+		glm::vec3 force = glm::vec3(x, y, z);
+		ApplyForce(shape1, force);
+	}
+}
+void CountParticlesToDeath() {
+	MoveParticles();
+	for (int i = 0; i < allParticles.size(); i++)
+	{
+		Particle& shape1 = *allParticles[i];
+		shape1.DeathCount -= 1;
+		if (shape1.DeathCount == 0)
+		{
+			DestoryParticles(*allParticles[i]);
+		}
+
+	}
+}
+
+
 void startup() {
 	// Keep track of the running time
 	GLfloat currentTime = (GLfloat)glfwGetTime();    // retrieve timelapse
@@ -785,8 +834,8 @@ void startup() {
 
 	// Load Geometry examples
 
-	
-	
+	CreateParticles();
+
 	myCube.Load();
     myCube.collision_type = cube;
 	myCube.w_matrix = 
@@ -875,7 +924,7 @@ void startup() {
 
 	// Optimised Graphics
 	myGraphics.SetOptimisations();        // Cull and depth testing
-
+	srand(static_cast <unsigned> (time(0)));
 }
 
 void updateCamera() {
@@ -1020,7 +1069,7 @@ void updateSceneElements() {
 	t += 0.01f; // increment movement variable
 	//physicsEffects();
 	
-
+	CountParticlesToDeath();
 
 	if (glfwWindowShouldClose(myGraphics.window) == GL_TRUE) quit = true; // If quit by pressing x on window.
 

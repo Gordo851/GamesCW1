@@ -59,7 +59,6 @@ public:
 	int lastCollided = -1; //index of object last collidesd with
 	bool onGround = false;
 
-
 	//these are of efficensy 
 	vector<GLfloat> currentVertexPositions;
 
@@ -100,4 +99,12 @@ class Line : public Shapes {
 public:
 	Line();
 	~Line();
+};
+
+class Particle: public Shapes{
+public:
+	int DeathCount = 100;
+	Particle();
+	~Particle();
+private:
 };

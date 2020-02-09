@@ -1,11 +1,11 @@
 ﻿  GPGame_Template_VS2019_x64.cpp
-G:\Users\Sam\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(180,15): warning C4305: 'initializing': truncation from 'double' to 'float'
-G:\Users\Sam\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(321,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-G:\Users\Sam\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(325,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-G:\Users\Sam\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(330,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-G:\Users\Sam\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(334,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-G:\Users\Sam\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(338,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-G:\Users\Sam\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(342,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-G:\Users\Sam\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(1089,13): warning C4305: '+=': truncation from 'double' to 'float'
-G:\Users\Sam\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(1098,13): warning C4305: '+=': truncation from 'double' to 'float'
-  GPGame_Template_VS2019_x64.vcxproj -> G:\Users\Sam\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\x64\Debug\GPGame_Template_VS2019_x64.exe
+C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(183,15): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(324,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(328,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(333,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(337,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(341,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(345,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(1144,13): warning C4305: '+=': truncation from 'double' to 'float'
+C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(1153,13): warning C4305: '+=': truncation from 'double' to 'float'
+  GPGame_Template_VS2019_x64.vcxproj -> C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\x64\Debug\GPGame_Template_VS2019_x64.exe
