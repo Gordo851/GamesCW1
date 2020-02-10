@@ -80,6 +80,7 @@ Particle particle;
 Particle particleArray[20];
 vector<Shapes*> allShapes;
 vector<Particle*> allParticles;
+int counter = 0;
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
 
@@ -769,23 +770,32 @@ void checkCollisions()
 }
 
 void CreateParticles() {
-	
 	for (int x = 0; x < size(particleArray); x += 1) {
 		particleArray[x].Load();
 		particleArray[x].collision_type = sphere;
 		particleArray[x].w_matrix =
-			glm::translate(glm::vec3(x*0.1f, 1.0f, 1.0f)) *
+			glm::translate(glm::vec3(0.1f*x, 1.0f, 1.0f)) *
 			glm::mat4(1.0f);
 		particleArray[x].mass = 0.5f;
 		particleArray[x].fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 		allShapes.push_back(&particleArray[x]);
-		allParticles.push_back(&particleArray[x]);
-		
-	}
-	
+		allParticles.push_back(&particleArray[x]);	
+	}	
 }
+void ResetParticles() {
+	for (int x = 0; x < size(particleArray); x += 1) {
+		particleArray[x].w_matrix =
+			glm::translate(glm::vec3(0.1f * x, 1.0f, 1.0f)) *
+			glm::mat4(1.0f);
+		particleArray[x].fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		particleArray[x].DeathCount = 100;
+	}
+}
+
 void DestoryParticles(Particle& shape1) {
-	shape1.~Particle();
+	shape1.lineColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+	shape1.fillColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+	//shape1.~Particle();
 }
 void MoveParticles() {
 	for (int i = 0; i < allParticles.size(); i++)
@@ -804,6 +814,7 @@ void CountParticlesToDeath() {
 	for (int i = 0; i < allParticles.size(); i++)
 	{
 		Particle& shape1 = *allParticles[i];
+		cout << shape1.DeathCount;
 		shape1.DeathCount -= 1;
 		if (shape1.DeathCount == 0)
 		{
@@ -811,6 +822,7 @@ void CountParticlesToDeath() {
 		}
 
 	}
+	cout << "\n";
 }
 
 
@@ -981,6 +993,11 @@ void updateSceneElements() {
 
 	// Do not forget your ( T * R * S ) http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
 	// Calculate Cube position
+	counter += 1;
+	if (counter == 60)
+	{
+		ResetParticles();
+	}
 
 	for (int i = 0; i < allShapes.size(); i++)
 	{

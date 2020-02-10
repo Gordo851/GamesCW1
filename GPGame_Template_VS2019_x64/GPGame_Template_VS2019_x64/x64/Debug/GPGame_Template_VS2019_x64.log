@@ -6,6 +6,6 @@ C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_
 C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(337,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
 C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(341,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
 C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(345,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(1144,13): warning C4305: '+=': truncation from 'double' to 'float'
-C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(1153,13): warning C4305: '+=': truncation from 'double' to 'float'
+C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(1155,13): warning C4305: '+=': truncation from 'double' to 'float'
+C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(1164,13): warning C4305: '+=': truncation from 'double' to 'float'
   GPGame_Template_VS2019_x64.vcxproj -> C:\Users\gordo\OneDrive\Desktop\sem4\GamesCW1\GPGame_Template_VS2019_x64\x64\Debug\GPGame_Template_VS2019_x64.exe

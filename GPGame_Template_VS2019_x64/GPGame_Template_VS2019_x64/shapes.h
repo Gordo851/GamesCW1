@@ -103,7 +103,7 @@ public:
 
 class Particle: public Shapes{
 public:
-	int DeathCount = 100;
+	int DeathCount = 50;
 	Particle();
 	~Particle();
 private:
