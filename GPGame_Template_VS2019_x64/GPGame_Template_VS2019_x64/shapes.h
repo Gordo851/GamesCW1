@@ -44,12 +44,13 @@ public:
 	glm::mat4		w_matrix = glm::mat4(1.0f);
 	glm::mat4		w_matrix_old = glm::mat4(1.0f);
 	
+	
 //physics properties
 	//glm::vec3		linearMovement = glm::vec3(0.0f);
 	glm::vec3		velocity = glm::vec3(0.0f);
-	glm::vec3		oldSpeed = glm::vec3(0.0f);
-	glm::vec3		newSpeed = glm::vec3(0.0f);
 	float			mass = 1.0f; //All shapes have base mass of 0 by default - we consider this infante mass - makes them static
+	glm::vec3		rotVelocity = glm::vec3(0.0f);
+	glm::vec3		rotPosition = glm::vec3(0.0f);
 
 	glm::vec4		fillColor = glm::vec4(1.0, 0.0, 0.0, 1.0);
 	glm::vec4		lineColor = glm::vec4(0.0, 0.0, 0.0, 1.0);
@@ -58,6 +59,7 @@ public:
 	float radius = 0.0f;
 	int lastCollided = -1; //index of object last collidesd with
 	bool onGround = false;
+	
 
 	//these are of efficensy 
 	vector<GLfloat> currentVertexPositions;
