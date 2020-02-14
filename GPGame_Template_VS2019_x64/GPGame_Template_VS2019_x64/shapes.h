@@ -8,18 +8,17 @@ using namespace std;
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-enum Collision
+
+
+
+enum CollisionType
 {
 	sphere,
-	cube,
+	AAcube,
 	none
 };
 
-enum XYZ {
-	x = 0,
-	y = 1,
-	z = 2
-};
+
 
 class Shapes {
 
@@ -33,6 +32,8 @@ public:
 
 	vector<GLfloat> vertexPositions;
 
+	vector<GLfloat> currentVertexPositions;
+
 	GLuint          program;
 	GLuint          vao;
 	GLuint          buffer;
@@ -42,36 +43,34 @@ public:
 	glm::mat4		proj_matrix = glm::mat4(1.0f);
 	glm::mat4		mv_matrix = glm::mat4(1.0f);
 	glm::mat4		w_matrix = glm::mat4(1.0f);
-	glm::mat4		w_matrix_old = glm::mat4(1.0f);
-	
-	
-//physics properties
-	//glm::vec3		linearMovement = glm::vec3(0.0f);
-	glm::vec3		velocity = glm::vec3(0.0f);
-	float			mass = 1.0f; //All shapes have base mass of 0 by default - we consider this infante mass - makes them static
-	glm::vec3		rotVelocity = glm::vec3(0.0f);
-	glm::vec3		rotPosition = glm::vec3(0.0f);
 
 	glm::vec4		fillColor = glm::vec4(1.0, 0.0, 0.0, 1.0);
 	glm::vec4		lineColor = glm::vec4(0.0, 0.0, 0.0, 1.0);
 	float			lineWidth = 2.0f;
-	Collision collision_type = sphere;//defult collision sphere
-	float radius = 0.0f;
-	int lastCollided = -1; //index of object last collidesd with
-	bool onGround = false;
+	//
+	float mass = 1.0f;
+	float invMass;
+	glm::vec3 velocity = glm::vec3(0.0f);
+	CollisionType collision_type = sphere;//defult collision sphere
+	glm::vec3 min = glm::vec3(0.0f);
+	glm::vec3 max = glm::vec3(0.0f);
+	float radius = 0.5f;
+	float e = 0.6f;
+	glm::vec3 correction = glm::vec3(0.0f);
 	
-
-	//these are of efficensy 
-	vector<GLfloat> currentVertexPositions;
-
-
 
 protected:
 	string rawData;			// Import obj file from Blender (note: no textures or UVs).
 	void LoadObj();
 };
 
-
+struct Collision {
+public:
+	Shapes *a;
+	Shapes *b;
+	glm::vec3 normal;
+	float penetration;
+};
 
 class Cube : public Shapes {
 public:
@@ -103,10 +102,18 @@ public:
 	~Line();
 };
 
-class Particle: public Shapes{
+class Particle : public Shapes {
 public:
 	int DeathCount = 50;
 	Particle();
 	~Particle();
+private:
+};
+
+class Boid : public Shapes {
+public:
+	int DeathCount = 50;
+	Boid();
+	~Boid();
 private:
 };
