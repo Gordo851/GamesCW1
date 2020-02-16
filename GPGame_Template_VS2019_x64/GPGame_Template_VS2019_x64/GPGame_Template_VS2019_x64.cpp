@@ -87,6 +87,14 @@ Particle particle;
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
 
+//Search Variables
+int mapArray[20][20];
+Cube  mapCubeArray[20][20];
+Node node[400];
+vector<Node*> allNodes;
+vector<glm::vec2> path;
+vector<glm::vec2> availableIndexes;
+Cube  ShowSearchcubeArray[10];
 
 int main()
 {
@@ -121,6 +129,357 @@ int main()
    // cin.ignore(); cin.get(); // delay closing console to read debugging errors.
 
 	return 0;
+}
+////////////////////////////////////////////A* Search
+float CalculateHeuristic(float X, float Y)
+{
+	Shapes imaginaryPlace;
+	imaginaryPlace.w_matrix =
+		glm::translate(glm::vec3(X, 0.5f, Y)) *
+		glm::mat4(1.0f);
+	float heuristic = getDistanceBetweenCenters(imaginaryPlace, myTarget);
+	return heuristic;
+}
+void DrawMapOnScreen()
+{
+
+	for (int x = 0; x < 20; x += 1) {
+		for (int z = 0; z < 20; z += 1) {
+			if (mapArray[x][z] == 1) 
+			{
+				mapCubeArray[x][z].Load();
+				mapCubeArray[x][z].mass = 0.0f;
+				mapCubeArray[x][z].collision_type = cube;
+				mapCubeArray[x][z].w_matrix =
+					glm::translate(glm::vec3(0.0f+x, 0.5f, 0.0f+z)) *
+					glm::mat4(1.0f);
+				mapCubeArray[x][z].fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+				allShapes.push_back(&mapCubeArray[x][z]);
+			}
+		}
+	}
+}
+void CreateMap()
+{
+	//randomly place obstacles
+	float MAX = 1.0f;
+	for (int x = 0; x < 20; x ++)
+	{
+		for (int y = 0; y < 20; y++)
+		{
+			float random = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / MAX));
+			if (random > 0.7f)
+			{
+				mapArray[x][y] = 1;
+			}
+			else
+			{
+				mapArray[x][y] = 0;
+			}
+		}
+	}
+	//build sides
+	for (int x = 0; x < 20; x++)
+	{
+		for (int y = 0; y < 20; y += 19)
+		{
+			mapArray[x][y] = 1;
+		}
+	}
+	for (int x = 0; x < 20; x += 19)
+	{
+		for (int y = 0; y < 20; y++)
+		{
+			mapArray[x][y] = 1;
+		}
+	}
+}
+void movePlayer(int x, int y)
+{
+	playerX = x;
+	playerY = y;
+	myPlayer.w_matrix =
+		glm::translate(glm::vec3(playerX, 0.5f, playerY)) *
+		glm::mat4(1.0f);
+	myPlayer.velocity = (glm::vec3(0.0f, 0.0f, 0.0f));
+}
+void createSearchGraph()
+{
+	int index = 0;
+	for (int x = 0; x < 20; x++)
+	{
+		for (int y = 0; y < 20; y ++)
+		{
+			//create node at x,y if that area is empty (and therefore passable by agent)
+			if (mapArray[x][y] == 0)
+			{
+				node[index].index = glm::vec2(x,y);
+				node[index].HeuristicCost = CalculateHeuristic(x, y);
+				allNodes.push_back(&node[index]);
+				//search all nodes within a radius of one of our node. If they are empty create a path between this node and that node. 
+				if (0 < x < 20 and 0 < y < 20)
+				{
+					if (mapArray[x][y + 1] == 0)
+					{
+						node[index].travelUp = true;
+					}
+					if (mapArray[x][y - 1] == 0)
+					{
+						node[index].travelDown = true;
+					}
+					if (mapArray[x + 1][y] == 0)
+					{
+						node[index].travelLeft = true;
+					}
+					if (mapArray[x - 1][y] == 0)
+					{
+						node[index].travelRight = true;
+					}
+				}
+				index += 1;
+			}
+		}
+	}
+	searchGraph();
+}
+Node findNodesByIndex(glm::vec2 index)
+{
+	for (int k = 0; k < allNodes.size(); k++)
+	{
+		Node testThisNode = *allNodes[k];
+		if (testThisNode.index == index)
+		{
+			return testThisNode;
+		}
+	}
+}
+
+
+
+void showSearch()
+{
+	glm::vec3 translationZero = glm::vec3(0, 0, 0);
+	for (int i = 0; i < availableIndexes.size(); i++)
+	{
+		int x = availableIndexes[i][0];
+		int y = availableIndexes[i][1];
+		ShowSearchcubeArray[i].w_matrix =
+			glm::translate(glm::vec3(x, 0.5f, y)) *
+			glm::mat4(1.0f);
+		ShowSearchcubeArray[i].velocity = (glm::vec3(0.0f, 0.0f, 0.0f));
+	}
+	// Update the camera transform based on interactive inputs or by following a predifined path.
+	updateCamera();
+
+	// Update position, orientations and any other relevant visual state of any dynamic elements in the scene.
+	updateSceneElements();
+
+	// Render a still frame into an off-screen frame buffer known as the backbuffer.
+	renderScene();
+	// Swap the back buffer with the front buffer, making the most recently rendered image visible on-screen.
+	glfwSwapBuffers(myGraphics.window);        // swap buffers (avoid flickering and tearing)
+	Sleep(100);
+	for (int i = 0; i < availableIndexes.size(); i++)
+	{
+		ShowSearchcubeArray[i].w_matrix* glm::translate(translationZero);
+	}
+	// Update the camera transform based on interactive inputs or by following a predifined path.
+	updateCamera();
+
+	// Update position, orientations and any other relevant visual state of any dynamic elements in the scene.
+	updateSceneElements();
+
+	// Render a still frame into an off-screen frame buffer known as the backbuffer.
+	renderScene();
+	// Swap the back buffer with the front buffer, making the most recently rendered image visible on-screen.
+	glfwSwapBuffers(myGraphics.window);        // swap buffers (avoid flickering and tearing)
+}
+void showChosenNode(Node nodeChosen)
+{
+
+}
+void searchGraph()
+{
+	Node currentNode = findNodesByIndex(glm::vec2(1, 1));
+	Node targetNode = findNodesByIndex(glm::vec2(17, 11));
+	vector<glm::vec2> usedIndexes;
+	usedIndexes.push_back(glm::vec2(1,1));
+	float totalCost = 10000.0f;
+	float pathCost = 0.0f;
+	float indexToBeDeleted;
+	glm::vec2 indexToAddToUsed;
+	int x = 0;
+	while (currentNode.index != targetNode.index)
+//	while (x < 20)
+	{
+		pathCost += 1;
+		if (currentNode.travelUp == true)
+		{
+			bool add = true;
+			glm::vec2 possibleNodeIndex = currentNode.index + glm::vec2(0, 1);
+			for (int ind = 0; ind < usedIndexes.size(); ind++)
+			{
+				if (usedIndexes[ind] == possibleNodeIndex)
+				{
+					add = false;
+				}
+			}
+			for (int ind = 0; ind < availableIndexes.size(); ind++)
+			{
+				if (availableIndexes[ind] == possibleNodeIndex)
+				{
+					add = false;
+				}
+			}
+			if (add == true)
+			{
+				availableIndexes.push_back(possibleNodeIndex);
+				for (int t = 0; t < allNodes.size(); t++)
+				{
+					Node& child = *allNodes[t];
+					if (child.index == possibleNodeIndex)
+					{
+						child.parent = currentNode.index;
+						child.pathCost = pathCost + 1;
+					}
+				}
+			}
+		}
+		if (currentNode.travelDown == true)
+		{
+			bool add = true;
+			glm::vec2 possibleNodeIndex = currentNode.index + glm::vec2(0, -1);
+			for (int ind = 0; ind < usedIndexes.size(); ind++)
+			{
+				if (usedIndexes[ind] == possibleNodeIndex)
+				{
+					add = false;
+				}
+			}
+			if (add == true)
+			{
+				availableIndexes.push_back(possibleNodeIndex);
+				for (int t = 0; t < allNodes.size(); t++)
+				{
+					Node& child = *allNodes[t];
+					if (child.index == possibleNodeIndex)
+					{
+						child.parent = currentNode.index;
+						child.pathCost = pathCost + 1;
+					}
+				}
+			}
+		}
+		if (currentNode.travelLeft == true)
+		{
+			bool add = true;
+			glm::vec2 possibleNodeIndex = currentNode.index + glm::vec2(1, 0);
+			for (int ind = 0; ind < usedIndexes.size(); ind++)
+			{
+				if (usedIndexes[ind] == possibleNodeIndex)
+				{
+					add = false;
+				}
+			}
+			if (add == true)
+			{
+				availableIndexes.push_back(possibleNodeIndex);
+				for (int t = 0; t < allNodes.size(); t++)
+				{
+					Node& child = *allNodes[t];
+					if (child.index == possibleNodeIndex)
+					{
+						child.parent = currentNode.index;
+						child.pathCost = pathCost + 1;
+					}
+				}
+			}
+		}
+		if (currentNode.travelRight == true)
+		{
+			bool add = true;
+			glm::vec2 possibleNodeIndex = currentNode.index + glm::vec2(-1, 0);
+			for (int ind = 0; ind < usedIndexes.size(); ind++)
+			{
+				if (usedIndexes[ind] == possibleNodeIndex)
+				{
+					add = false;
+				}
+			}
+			if (add == true)
+			{
+				availableIndexes.push_back(possibleNodeIndex);
+				for (int t = 0; t < allNodes.size(); t++)
+				{
+					Node& child = *allNodes[t];
+					if (child.index == possibleNodeIndex)
+					{
+						child.parent = currentNode.index;
+						child.pathCost = pathCost + 1;
+					}
+				}
+			}
+		}
+
+		totalCost = 1000.0f;
+		showSearch();
+		for (int i = 0; i < availableIndexes.size(); i++)
+		{
+			glm::vec2 indexHere = availableIndexes[i];
+			Node possibleNext = findNodesByIndex(indexHere);
+			float costOfPossible = possibleNext.HeuristicCost + possibleNext.pathCost;
+			if (costOfPossible < totalCost)
+			{
+				totalCost = costOfPossible;
+				currentNode = possibleNext;
+				indexToAddToUsed = indexHere;
+				indexToBeDeleted = i;
+			}
+		}
+
+
+		availableIndexes.erase(availableIndexes.begin() + indexToBeDeleted);
+		usedIndexes.push_back(indexToAddToUsed);
+		showChosenNode(currentNode);
+		x++;
+	
+	}
+	//creating path for agent
+	while (currentNode.index != glm::vec2(1, 1))
+	{
+		path.insert(path.begin(), currentNode.index);
+		for (int i = 0; i < allNodes.size(); i++)
+		{
+			Node& myParent = *allNodes[i];
+			if (myParent.index == currentNode.parent)
+			{
+				currentNode = myParent;
+			}
+		}
+	}
+	path.insert(path.begin(), currentNode.index);
+	std::cout << "Search complete";
+}
+void moveAlongPath()
+{
+	for (int i = 0; i < path.size(); i++)
+	{
+		int x = path[i][0];
+		int y = path[i][1];
+		movePlayer(x, y);
+
+		// Update the camera transform based on interactive inputs or by following a predifined path.
+		updateCamera();
+
+		// Update position, orientations and any other relevant visual state of any dynamic elements in the scene.
+		updateSceneElements();
+
+		// Render a still frame into an off-screen frame buffer known as the backbuffer.
+		renderScene();
+		// Swap the back buffer with the front buffer, making the most recently rendered image visible on-screen.
+		glfwSwapBuffers(myGraphics.window);        // swap buffers (avoid flickering and tearing)
+		Sleep(100);
+	}
 }
 
 ///////////////////////////////////////////////physics
@@ -518,7 +877,39 @@ void startup() {
 	// Calculate proj_matrix for the first time.
 	myGraphics.aspect = (float)myGraphics.windowWidth / (float)myGraphics.windowHeight;
 	myGraphics.proj_matrix = glm::perspective(glm::radians(50.0f), myGraphics.aspect, 0.1f, 1000.0f);
+	
+	//Load and draw map for A*
+	CreateMap();
+	DrawMapOnScreen();
+	//Load and draw player to show search path
+	myPlayer.Load();
+	myPlayer.mass = 1;
+	myPlayer.w_matrix = glm::translate(glm::vec3(playerX, 0.0f, playerY)) *
+		glm::mat4(1.0f);
+	allShapes.push_back(&myPlayer);
+	myPlayer.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); 
+	
+	//Load a target cube (red) and cubes to show the available nodes in a search
+	myTarget.Load();
+	myTarget.collision_type = cube;
+	myTarget.w_matrix =
+		glm::translate(glm::vec3(targetX, 0.5f, targetY)) *
+		glm::mat4(1.0f);
+	myTarget.mass = 0.0f;
+	myTarget.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	allShapes.push_back(&myTarget);
 
+	for (int x = 0; x < 10; x += 1) {
+		ShowSearchcubeArray[x].Load();
+		ShowSearchcubeArray[x].collision_type = cube;
+		ShowSearchcubeArray[x].mass = 1.0f;
+		ShowSearchcubeArray[x].w_matrix =
+			glm::translate(glm::vec3(x, 0.5f, 1.0f)) *
+			glm::mat4(1.0f);
+		ShowSearchcubeArray[x].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		allShapes.push_back(&ShowSearchcubeArray[x]);
+	}
+	
 	// Load Geometry examples
 	
 	myCube.Load();
@@ -816,6 +1207,7 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 		ApplyForce(myCube, force);
 
 	}
+	
 
 	// toggle showing mouse.
 	if (keyStatus[GLFW_KEY_M]) {
@@ -825,6 +1217,28 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 	// If exit key pressed.
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	
+	//Keys to move player, start search and then have player move along the returned path
+	if (keyStatus[GLFW_KEY_KP_8]) {
+		movePlayer(0, 1);
+	}
+	if (keyStatus[GLFW_KEY_KP_4]) {
+		movePlayer(1, 0);
+	}
+	if (keyStatus[GLFW_KEY_KP_6]) {
+		movePlayer(-1, 0);
+	}
+	if (keyStatus[GLFW_KEY_KP_5]) {
+		movePlayer(0, -1);
+	}
+
+	if (keyStatus[GLFW_KEY_KP_7]) {
+		createSearchGraph();
+	}
+	if (keyStatus[GLFW_KEY_KP_9]) {
+		moveAlongPath();
+	}
+	
 }
 
 void onMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
