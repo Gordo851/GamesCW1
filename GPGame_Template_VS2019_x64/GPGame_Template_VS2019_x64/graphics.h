@@ -39,11 +39,11 @@ public:
 	// Camera
 	bool			cameraFirstMouse = true;
 	GLfloat			cameraYaw = 90.0f;	// init pointing to inside
-	GLfloat			cameraPitch = 0.0f;	// start centered
+	GLfloat			cameraPitch = -90.0f;	// start centered
 	GLfloat			cameraLastX = (GLfloat)windowWidth / 2.0f;	// start middle screen
 	GLfloat			cameraLastY = (GLfloat)windowHeight / 2.0f;	// start middle screen
 	glm::vec3		cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-	glm::vec3		cameraPosition = glm::vec3(0.0f, 2.0f, -5.0f);
+	glm::vec3		cameraPosition = glm::vec3(0.0f, 30.0f, -5.0f);
 	glm::vec3		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f); 
 
 	int				mouseX = windowWidth/2;
