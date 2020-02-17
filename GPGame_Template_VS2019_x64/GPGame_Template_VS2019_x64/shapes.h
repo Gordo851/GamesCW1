@@ -51,6 +51,12 @@ public:
 	float mass = 1.0f;
 	float invMass;
 	glm::vec3 velocity = glm::vec3(0.0f);
+	glm::vec3 possition = glm::vec3(0.0f);
+	glm::vec3 rotation = glm::vec3(0.0f);
+	glm::vec3 scale = glm::vec3(1.0f);
+
+
+
 	CollisionType collision_type = sphere;//defult collision sphere
 	glm::vec3 min = glm::vec3(0.0f);
 	glm::vec3 max = glm::vec3(0.0f);
@@ -58,6 +64,8 @@ public:
 	float e = 0.6f;
 	glm::vec3 correction = glm::vec3(0.0f);
 	
+
+	bool hasGravity = true;
 
 protected:
 	string rawData;			// Import obj file from Blender (note: no textures or UVs).
@@ -112,8 +120,13 @@ private:
 
 class Boid : public Shapes {
 public:
-	int DeathCount = 50;
+	//glm::vec3 position;
 	Boid();
 	~Boid();
+	float speed = 1.0f; // 1 - 4
+	float range = 5.0f;
+	float minDist = 1.5f;
+	glm::vec3 colour = glm::vec3(0.5f);
+
 private:
 };

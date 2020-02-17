@@ -157,12 +157,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="boidFlock.cpp" />
     <ClCompile Include="GPGame_Template_VS2019_x64.cpp" />
     <ClCompile Include="graphics.cpp" />
+    <ClCompile Include="Search.cpp" />
     <ClCompile Include="shapes.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="boidFlock.h" />
     <ClInclude Include="graphics.h" />
+    <ClInclude Include="Search.h" />
     <ClInclude Include="shapes.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

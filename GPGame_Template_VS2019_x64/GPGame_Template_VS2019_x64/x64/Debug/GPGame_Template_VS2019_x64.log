@@ -1,3 +1,32 @@
 ﻿  GPGame_Template_VS2019_x64.cpp
-C:\Users\samth\Documents\Heriot Watt\Games Programing\GPGameTemplate-master\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(323): warning C4715: 'isColliding': not all control paths return a value
-  GPGame_Template_VS2019_x64.vcxproj -> C:\Users\samth\Documents\Heriot Watt\Games Programing\GPGameTemplate-master\GPGame_Template_VS2019_x64\x64\Debug\GPGame_Template_VS2019_x64.exe
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(220,12): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(221,12): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(238,55): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(238,52): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(241,8): warning C4804: '<': unsafe use of type 'bool' in operation
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(241,34): warning C4804: '<': unsafe use of type 'bool' in operation
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(285,9): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(285,9): warning C4244:         with
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(285,9): warning C4244:         [
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(285,9): warning C4244:             T=float
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(285,9): warning C4244:         ]
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(286,9): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(286,9): warning C4244:         with
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(286,9): warning C4244:         [
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(286,9): warning C4244:             T=float
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(286,9): warning C4244:         ]
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(457,24): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(462,53): warning C4244: 'argument': conversion from 'float' to 'const __int64', possible loss of data
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(488,9): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(488,9): warning C4244:         with
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(488,9): warning C4244:         [
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(488,9): warning C4244:             T=float
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(488,9): warning C4244:         ]
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(489,9): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(489,9): warning C4244:         with
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(489,9): warning C4244:         [
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(489,9): warning C4244:             T=float
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(489,9): warning C4244:         ]
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(276): warning C4715: 'findNodesByIndex': not all control paths return a value
+C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64\GPGame_Template_VS2019_x64.cpp(687): warning C4715: 'isColliding': not all control paths return a value
+  GPGame_Template_VS2019_x64.vcxproj -> C:\Users\samth\Documents\GitHub\GamesCW1\GPGame_Template_VS2019_x64\x64\Debug\GPGame_Template_VS2019_x64.exe

@@ -24,12 +24,24 @@
     <ClCompile Include="shapes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="boidFlock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Search.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="shapes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="boidFlock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Search.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

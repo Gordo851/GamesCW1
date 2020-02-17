@@ -25,6 +25,8 @@ using namespace std;
 #include <glm/gtx/transform.hpp>
 #include "graphics.h"
 #include "shapes.h"
+#include "Search.h"
+#include "boidFlock.h"
 
 // MAIN FUNCTIONS
 void startup();
@@ -46,6 +48,11 @@ void checkCollisions();
 void PositionalCorrection(Shapes& a, Shapes& b, float penetration, glm::vec3 normal);
 void getAACubeNormal(Shapes& a, Shapes& b);
 bool getAAcubeSphereNormal(Shapes& a, Shapes& b);
+bool getAAcubeSphereNormal2(Shapes& cube, Shapes& sphere);
+
+
+void searchGraph();
+
 
 // CALLBACK FUNCTIONS
 void onResizeCallback(GLFWwindow* window, int w, int h);
@@ -75,9 +82,23 @@ Cube        myFloor;
 Line        myLine;
 Cylinder    myCylinder;
 Cube cubeArray[10][10];
-
+//////////////////////////////////////check
+Cube myPlayer;
+Cube myTarget;
+float playerX = 0.0;
+float playerY = 0.0;
+float targetX = 0.0;
+float targetY = 0.0;
+//////////////////////////////////////
 vector<Shapes*> allShapes;
 vector<Collision*> allCollisions;
+
+
+boidFlock flock;
+Boid boidArray[100];
+
+boidFlock flock2;
+Boid boidArray2[100];
 
 
 vector<Particle*> allParticles;
@@ -137,7 +158,7 @@ float CalculateHeuristic(float X, float Y)
 	imaginaryPlace.w_matrix =
 		glm::translate(glm::vec3(X, 0.5f, Y)) *
 		glm::mat4(1.0f);
-	float heuristic = getDistanceBetweenCenters(imaginaryPlace, myTarget);
+	float heuristic = sqrt(getSquareDistance(imaginaryPlace, myTarget));//square root for now
 	return heuristic;
 }
 void DrawMapOnScreen()
@@ -149,7 +170,7 @@ void DrawMapOnScreen()
 			{
 				mapCubeArray[x][z].Load();
 				mapCubeArray[x][z].mass = 0.0f;
-				mapCubeArray[x][z].collision_type = cube;
+				mapCubeArray[x][z].collision_type = AAcube;
 				mapCubeArray[x][z].w_matrix =
 					glm::translate(glm::vec3(0.0f+x, 0.5f, 0.0f+z)) *
 					glm::mat4(1.0f);
@@ -278,7 +299,7 @@ void showSearch()
 	renderScene();
 	// Swap the back buffer with the front buffer, making the most recently rendered image visible on-screen.
 	glfwSwapBuffers(myGraphics.window);        // swap buffers (avoid flickering and tearing)
-	Sleep(100);
+	//Sleep(100);
 	for (int i = 0; i < availableIndexes.size(); i++)
 	{
 		ShowSearchcubeArray[i].w_matrix* glm::translate(translationZero);
@@ -478,7 +499,7 @@ void moveAlongPath()
 		renderScene();
 		// Swap the back buffer with the front buffer, making the most recently rendered image visible on-screen.
 		glfwSwapBuffers(myGraphics.window);        // swap buffers (avoid flickering and tearing)
-		Sleep(100);
+		//Sleep(100);
 	}
 }
 
@@ -553,30 +574,18 @@ void calculateRebound(Shapes& a, Shapes& b, glm::vec3 normal) {
 	*/
 }
 
-void PositionalCorrection(Shapes& a, Shapes& b, float penetration,  glm::vec3 normal)
+void PositionalCorrection(Shapes& a, Shapes& b, float penetration, glm::vec3 normal)
 {
-	
-	//glm::vec3 aPos = getposition(a);
-	//glm::vec3 bPos = getposition(b);
-	
+
+
 	float percent = 0.8f; // usually 20% to 80%
 	float slop = 0.01f; // usually 0.01 to 0.1
-	
+
 	glm::vec3 correction = (std::max((penetration - slop), 0.0f) / (a.invMass + b.invMass)) * percent * normal;
-	
-	
 
 	a.correction -= a.invMass * correction;
 	b.correction += b.invMass * correction;
-	/*
-	a.w_matrix[3][0] = aPos.x;
-	a.w_matrix[3][1] = aPos.y;
-	a.w_matrix[3][2] = aPos.z;
 
-	b.w_matrix[3][0] = aPos.x;
-	b.w_matrix[3][1] = aPos.y;
-	b.w_matrix[3][2] = aPos.z;
-	*/
 }
 
 /**
@@ -595,22 +604,27 @@ void calculateMinMax(Shapes& shape) {
 	//cout << shape.vertexPositions.size() << "unmoved\n";
 	shape.currentVertexPositions = newPositions;
 
-	glm::vec3 min = glm::vec3(999999.0f);
-	glm::vec3 max = glm::vec3(-999999.0f);
+	if (shape.collision_type == AAcube) {
 
-	for (unsigned int i = 0; i < newPositions.size(); i += 3) {
-		for (int x = 0; x < 3; x++) {
-			if (newPositions[i + x] > max[x]) {
-				max[x] = newPositions[i + x];
-			}
-			if (newPositions[i + x] < min[x]) {
-				min[x] = newPositions[i + x];
+		glm::vec3 min = glm::vec3(999999.0f);
+		glm::vec3 max = glm::vec3(-999999.0f);
+
+		for (unsigned int i = 0; i < newPositions.size(); i += 3) {
+			for (int x = 0; x < 3; x++) {
+				if (newPositions[i + x] > max[x]) {
+					max[x] = newPositions[i + x];
+				}
+				if (newPositions[i + x] < min[x]) {
+					min[x] = newPositions[i + x];
+				}
 			}
 		}
+
+		shape.min = min;
+		shape.max = max;
+
 	}
-		
-	shape.min = min;
-	shape.max = max;
+
 
 }
 
@@ -620,7 +634,7 @@ bool isColliding(Shapes& shape1, Shapes& shape2) {
 
 	if (shape1.collision_type == none || shape2.collision_type == none) {
 		return false;
-	} 
+	}
 	else if (shape1.collision_type == AAcube && shape2.collision_type == AAcube) {
 		//cout << "cube\n";
 		if (shape1.max.x < shape2.min.x || shape1.min.x > shape2.max.x) {
@@ -639,72 +653,202 @@ bool isColliding(Shapes& shape1, Shapes& shape2) {
 	}
 	else if (shape1.collision_type == sphere && shape2.collision_type == sphere) {
 		//cout << "shpere\n";
-		float radius = shape1.radius  + shape2.radius ;
+		float radius = shape1.radius + shape2.radius;
 		float radius2 = radius * radius;
 		float diss = getSquareDistance(shape1, shape2);
-		if ( diss < radius2) {
+		if (diss < radius2) {
 			diss = sqrt(diss);
 			if (diss != 0)
 			{
 				Collision coll;
-				
+
 				// Distance is difference between radius and distanc
 				coll.penetration = radius - diss;
-				coll.normal = getXYZdistance(shape2, shape1)/diss;
+				coll.normal = getXYZdistance(shape2, shape1) / diss;
 				allCollisions.push_back(&coll);
 				PositionalCorrection(shape1, shape2, coll.penetration, coll.normal);
 				return true;
 			}
-			
+
 
 
 			return true;
 		}
 		return false;
 	}
-	else if ((shape1.collision_type == AAcube && shape2.collision_type == sphere) || (shape1.collision_type == sphere && shape2.collision_type == AAcube)) {//////////////////temp code
-		//cout << "cube\n";
-		if (shape1.max.x < shape2.min.x || shape1.min.x > shape2.max.x) {
-			return false;
-		}
-		if (shape1.max.y < shape2.min.y || shape1.min.y > shape2.max.y) {
-			return false;
-		}
-		if (shape1.max.z < shape2.min.z || shape1.min.z > shape2.max.z) {
-			return false;
-		}
+	else if ((shape1.collision_type == AAcube && shape2.collision_type == sphere)) {//////////////////temp code
 
-		getAACubeNormal(shape1, shape2);
-
-		return true;
+		return getAAcubeSphereNormal2(shape1, shape2);
+	}
+	else if (shape1.collision_type == sphere && shape2.collision_type == AAcube) {
+		return getAAcubeSphereNormal(shape1, shape2);
 	}
 
 }
 
 
-bool getAAcubeSphereNormal(Shapes& a, Shapes& b) {
+bool getAAcubeSphereNormal2(Shapes& cube, Shapes& sphere) {//shape 1 sphere
+
+
+
+
+	glm::vec3 spherePos = getposition(sphere);
+	float radius = sphere.radius;
+
+	float x = max(cube.min.x, min(spherePos.x, cube.max.x));
+	float y = max(cube.min.y, min(spherePos.y, cube.max.y));
+	float z = max(cube.min.z, min(spherePos.z, cube.max.z));
+
+
+	float diss = (x - spherePos.x) * (x - spherePos.x) + (y - spherePos.y) * (y - spherePos.y) + (z - spherePos.z) * (z - spherePos.z);
+	if (diss - radius * radius < 0) {//colliding
+
+		glm::vec3 overlap = glm::vec3(0.0f);
+		Collision coll;
+		glm::vec3 xyzDiss = getXYZdistance(cube, sphere);
+		overlap = ((((spherePos + radius) - (spherePos - radius)) / 2.0f) + ((cube.max - cube.min) / 2.0f)) - abs(xyzDiss);
+
+
+
+		if (overlap.x < overlap.y) {
+			if (overlap.x < overlap.z) {
+				if (xyzDiss.x < 0) {
+					coll.normal = glm::vec3(-1.0, 0.0, 0.0);
+				}
+				else {
+					coll.normal = glm::vec3(1.0, 0.0, 0.0);
+				}
+				coll.penetration = overlap.x;
+			}
+			else {
+				if (xyzDiss.z < 0) {
+					coll.normal = glm::vec3(0.0, 0.0, -1.0);
+				}
+				else {
+					coll.normal = glm::vec3(0.0, 0.0, 1.0);
+				}
+				coll.penetration = overlap.z;
+
+			}
+		}
+		else {
+			if (overlap.y < overlap.z) {
+				if (xyzDiss.y < 0) {
+					coll.normal = glm::vec3(0.0, -1.0, 0.0);
+				}
+				else {
+					coll.normal = glm::vec3(0.0, 1.0, 0.0);
+				}
+				coll.penetration = overlap.y;
+			}
+			else {
+				if (xyzDiss.z < 0) {
+					coll.normal = glm::vec3(0.0, 0.0, -1.0);
+				}
+				else {
+					coll.normal = glm::vec3(0.0, 0.0, 1.0);
+				}
+				coll.penetration = overlap.z;
+			}
+		}
+
+		//coll.normal = getXYZdistance(a, b) / sqrt(getSquareDistance(a,b));
+		allCollisions.push_back(&coll);
+		PositionalCorrection(sphere, cube, coll.penetration, coll.normal);
+
+		return true;
+	}
 	return false;
-	
+}
+
+bool getAAcubeSphereNormal(Shapes& sphere, Shapes& cube) {//shape 1 sphere
+
+	glm::vec3 spherePos = getposition(sphere);
+	float radius = sphere.radius;
+	float x = max(cube.min.x, min(spherePos.x, cube.max.x));
+	float y = max(cube.min.y, min(spherePos.y, cube.max.y));
+	float z = max(cube.min.z, min(spherePos.z, cube.max.z));
+
+
+	float diss = (x - spherePos.x) * (x - spherePos.x) + (y - spherePos.y) * (y - spherePos.y) + (z - spherePos.z) * (z - spherePos.z);
+	if (diss - radius * radius < 0) {//colliding
+
+		glm::vec3 overlap = glm::vec3(0.0f);
+		Collision coll;
+		glm::vec3 xyzDiss = getXYZdistance(cube, sphere);
+		overlap = ((((spherePos + radius) - (spherePos - radius)) / 2.0f) + ((cube.max - cube.min) / 2.0f)) - abs(xyzDiss);
+
+
+
+		if (overlap.x < overlap.y) {
+			if (overlap.x < overlap.z) {
+				if (xyzDiss.x < 0) {
+					coll.normal = glm::vec3(-1.0, 0.0, 0.0);
+				}
+				else {
+					coll.normal = glm::vec3(1.0, 0.0, 0.0);
+				}
+				coll.penetration = overlap.x;
+			}
+			else {
+				if (xyzDiss.z < 0) {
+					coll.normal = glm::vec3(0.0, 0.0, -1.0);
+				}
+				else {
+					coll.normal = glm::vec3(0.0, 0.0, 1.0);
+				}
+				coll.penetration = overlap.z;
+
+			}
+		}
+		else {
+			if (overlap.y < overlap.z) {
+				if (xyzDiss.y < 0) {
+					coll.normal = glm::vec3(0.0, -1.0, 0.0);
+				}
+				else {
+					coll.normal = glm::vec3(0.0, 1.0, 0.0);
+				}
+				coll.penetration = overlap.y;
+			}
+			else {
+				if (xyzDiss.z < 0) {
+					coll.normal = glm::vec3(0.0, 0.0, -1.0);
+				}
+				else {
+					coll.normal = glm::vec3(0.0, 0.0, 1.0);
+				}
+				coll.penetration = overlap.z;
+			}
+		}
+
+		//coll.normal = getXYZdistance(a, b) / sqrt(getSquareDistance(a,b));
+		allCollisions.push_back(&coll);
+		PositionalCorrection(sphere, cube, coll.penetration, coll.normal);
+
+		return true;
+	}
+	return false;
 }
 
 void getAACubeNormal(Shapes& a, Shapes& b) {
-	
+
 	//https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331
 	glm::vec3 xyzDiss = getXYZdistance(b, a);
 	glm::vec3 overlap = glm::vec3(0.0f);
-	
-	Collision coll;
-	
-	overlap = (((a.max - a.min)/2.0f) + ((b.max - b.min) / 2.0f)) - abs(xyzDiss);
-	
-	
-	
 
-	
+	Collision coll;
+
+	overlap = (((a.max - a.min) / 2.0f) + ((b.max - b.min) / 2.0f)) - abs(xyzDiss);
+
+
+
+
+
 	if (overlap.x < overlap.y) {
 		if (overlap.x < overlap.z) {
 			if (xyzDiss.x < 0) {
-				coll.normal = glm::vec3(-1.0, 0.0,0.0);
+				coll.normal = glm::vec3(-1.0, 0.0, 0.0);
 			}
 			else {
 				coll.normal = glm::vec3(1.0, 0.0, 0.0);
@@ -725,10 +869,10 @@ void getAACubeNormal(Shapes& a, Shapes& b) {
 	else {
 		if (overlap.y < overlap.z) {
 			if (xyzDiss.y < 0) {
-				coll.normal = glm::vec3(0.0,-1.0, 0.0);
+				coll.normal = glm::vec3(0.0, -1.0, 0.0);
 			}
 			else {
-				coll.normal = glm::vec3(0.0,  1.0, 0.0);
+				coll.normal = glm::vec3(0.0, 1.0, 0.0);
 			}
 			coll.penetration = overlap.y;
 		}
@@ -745,8 +889,8 @@ void getAACubeNormal(Shapes& a, Shapes& b) {
 	//coll.normal = getXYZdistance(a, b) / sqrt(getSquareDistance(a,b));
 	allCollisions.push_back(&coll);
 	PositionalCorrection(a, b, coll.penetration, coll.normal);
-	
-	
+
+
 }
 
 glm::vec3 getXYZdistance(glm::vec3 point1, glm::vec3 point2) {
@@ -794,7 +938,7 @@ void checkCollisions()
 		}
 		//shape1.fillColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 	}
-	
+
 	//Itteration for allShapes
 	for (int i = 0; i < allShapes.size(); i++)
 	{
@@ -809,7 +953,7 @@ void checkCollisions()
 				Collision& coll = *allCollisions[allCollisions.size() - 1];
 				glm::vec3 normal = coll.normal;
 				calculateRebound(shape1, shape2, normal);
-				
+
 			}
 		}
 	}
@@ -821,7 +965,7 @@ void applyGravity() {
 	for (int i = 0; i < allShapes.size(); i++)//apply gravity
 	{
 		Shapes& shape1 = *allShapes[i];
-		if (shape1.mass != 0) {
+		if (shape1.mass != 0 && shape1.hasGravity == true) {
 			ApplyForce(shape1, glm::vec3(0.0f, -0.1f * shape1.mass, 0.0f));
 		}
 
@@ -845,6 +989,71 @@ void applyGravity() {
 
 //////////boid stuff goes here//////////////
 
+
+void setupBoids() {
+
+
+
+	for (int x = 0; x < size(boidArray); x++) {
+		boidArray[x].Load();
+		boidArray[x].collision_type = AAcube;
+		//boidArray[x].radius = 1;
+		boidArray[x].hasGravity = false;
+		boidArray[x].w_matrix =
+			glm::translate(glm::vec3((1.0f * x) - 50.0f, 1.0f, 1.0f)) *
+			glm::mat4(1.0f);
+		boidArray[x].mass = 0.01f;
+		boidArray[x].invMass = 100.0f;
+		boidArray[x].velocity = glm::vec3(0.1f);
+		boidArray[x].colour = glm::vec3(0.5f, 0.5f, 0.5f);
+		boidArray[x].fillColor = glm::vec4(0.5f, 0.0f, 0.5f, 1.0f);
+		flock.useTarget = true;
+		boidArray[x].speed = 2.0f;
+		flock.boidList.push_back(&boidArray[x]);
+		allShapes.push_back(flock.boidList[x]);
+
+	}
+	for (int x = 0; x < size(boidArray2); x++) {
+		boidArray2[x].Load();
+		boidArray2[x].collision_type = AAcube;
+		//boidArray2[x].radius = 1;
+		boidArray2[x].hasGravity = false;
+		boidArray2[x].w_matrix =
+			glm::translate(glm::vec3(1.0f * x, 1.0f, 15.0f)) *
+			glm::mat4(1.0f);
+		boidArray2[x].mass = 0.01f;
+		boidArray2[x].invMass = 100.0f;
+		boidArray2[x].velocity = glm::vec3(0.1f);
+		boidArray2[x].speed = 1.0f;
+		boidArray2[x].colour = glm::vec3(0.5f, 0.5f, 0.5f);
+		boidArray2[x].fillColor = glm::vec4(0.5f, 0.5f, 0.0f, 1.0f);
+		flock2.useTarget = true;
+		flock2.boidList.push_back(&boidArray2[x]);
+		allShapes.push_back(flock2.boidList[x]);
+	}
+
+
+}
+
+void boidUpdate() {
+
+	flock.target = getposition(myCube);
+	flock.updatePositions();
+
+	for (int i = 0; i < flock.boidList.size(); i++) {
+		flock.steer(i);
+	}
+
+
+	flock2.target = getposition(myCube);
+
+	flock2.updatePositions();
+
+	for (int i = 0; i < flock2.boidList.size(); i++) {
+		flock2.steer(i);
+	}
+
+}
 
 
 
@@ -878,10 +1087,17 @@ void startup() {
 	myGraphics.aspect = (float)myGraphics.windowWidth / (float)myGraphics.windowHeight;
 	myGraphics.proj_matrix = glm::perspective(glm::radians(50.0f), myGraphics.aspect, 0.1f, 1000.0f);
 	
+
+	//load up boids
+	setupBoids();
+
 	//Load and draw map for A*
-	CreateMap();
-	DrawMapOnScreen();
+	//CreateMap();
+	//DrawMapOnScreen();
+
+
 	//Load and draw player to show search path
+	/*
 	myPlayer.Load();
 	myPlayer.mass = 1;
 	myPlayer.w_matrix = glm::translate(glm::vec3(playerX, 0.0f, playerY)) *
@@ -891,7 +1107,7 @@ void startup() {
 	
 	//Load a target cube (red) and cubes to show the available nodes in a search
 	myTarget.Load();
-	myTarget.collision_type = cube;
+	myTarget.collision_type = AAcube;
 	myTarget.w_matrix =
 		glm::translate(glm::vec3(targetX, 0.5f, targetY)) *
 		glm::mat4(1.0f);
@@ -901,7 +1117,7 @@ void startup() {
 
 	for (int x = 0; x < 10; x += 1) {
 		ShowSearchcubeArray[x].Load();
-		ShowSearchcubeArray[x].collision_type = cube;
+		ShowSearchcubeArray[x].collision_type = AAcube;
 		ShowSearchcubeArray[x].mass = 1.0f;
 		ShowSearchcubeArray[x].w_matrix =
 			glm::translate(glm::vec3(x, 0.5f, 1.0f)) *
@@ -909,14 +1125,14 @@ void startup() {
 		ShowSearchcubeArray[x].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		allShapes.push_back(&ShowSearchcubeArray[x]);
 	}
-	
+	*/
 	// Load Geometry examples
 	
 	myCube.Load();
 	myCube.collision_type = AAcube;
 
 	myCube.w_matrix =
-		glm::translate(glm::vec3(-4.0f, 6.0f, 4.0f)) *
+		glm::translate(glm::vec3(-4.0f, 4.0f, 4.0f)) *
 		glm::mat4(1.0f);
 	myCube.mass = 1.0f;
 	myCube.invMass = 1.0f;
@@ -929,15 +1145,17 @@ void startup() {
 	myCube2.invMass = 0.0f;
 	myCube2.w_matrix =
 		glm::translate(glm::vec3(-4.0f, 2.0f, 4.0f)) *
-		glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)) *
+		glm::scale(glm::vec3(1.5f, 1.5f, 1.5f)) *
 		glm::mat4(1.0f);
 	myCube2.collision_type = AAcube;
 	myCube2.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	allShapes.push_back(&myCube2);
-	
+	myCube2.scale = glm::vec3(1.5, 1.5, 1.5);
+
 	//
 
 	mySphere.Load();
+	mySphere.collision_type = AAcube;
 	mySphere.w_matrix = glm::translate(glm::vec3(-2.0f, 1.0f, -3.0f)) *
 		glm::rotate(-t, glm::vec3(0.0f, 1.0f, 0.0f)) *
 		glm::rotate(-t, glm::vec3(1.0f, 0.0f, 0.0f)) *
@@ -953,17 +1171,17 @@ void startup() {
 	allShapes.push_back(&myCylinder);
 	myCylinder.fillColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
 	myCylinder.lineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	
+
 	for (int x = 0; x < 5; x += 1) {
 		for (int z = 0; z < 5; z += 1) {
 
 			cubeArray[x][z].Load();
 			cubeArray[x][z].collision_type = AAcube;
 			//cubeArray[x][z].radius = 0.5f;
-			cubeArray[x][z].mass = 1.0f;
-			cubeArray[x][z].invMass = 1.0f;
+			cubeArray[x][z].mass = 0.0f;
+			cubeArray[x][z].invMass = 0.0f;
 			cubeArray[x][z].w_matrix =
-				glm::translate(glm::vec3((2 + x * 1.2), 3 * z + 1, 4.0f + 7 * 1.2 )) *
+				glm::translate(glm::vec3((2 + x * 2.0f), 2.00001f * z + 1, 5.0f - x)) *
 				glm::mat4(1.0f);
 			cubeArray[x][z].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 			allShapes.push_back(&cubeArray[x][z]);
@@ -977,13 +1195,14 @@ void startup() {
 	arrowZ.fillColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); arrowZ.lineColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 
 	myFloor.Load();
-	myFloor.w_matrix = 
+	myFloor.w_matrix =
 		glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
 		glm::scale(glm::vec3(1000.0f, 0.001f, 1000.0f)) *
 		glm::mat4(1.0f);
 	myFloor.collision_type = AAcube;
 	myFloor.mass = 0.0f;
 	myFloor.invMass = 0.0f;
+	myFloor.scale = glm::vec3(1000.0f, 0.001f, 1000.0f);
 
 	myFloor.fillColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand Colour
 	myFloor.lineColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand again
@@ -998,9 +1217,9 @@ void startup() {
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		Shapes& shape1 = *allShapes[i];
-		
+		shape1.possition = getposition(shape1);
 		calculateMinMax(shape1);
-		
+
 	}
 
 	// Optimised Graphics
@@ -1056,6 +1275,8 @@ void updateCamera() {
 void updateSceneElements() {
 
 	glfwPollEvents();                                // poll callbacks
+	
+	boidUpdate();
 	applyGravity();
 	checkCollisions(); // check collistion
 
@@ -1076,7 +1297,9 @@ void updateSceneElements() {
 	{
 		Shapes& shape1 = *allShapes[i];
 		shape1.velocity = shape1.velocity - (shape1.velocity * 0.1f) / (1 / deltaTime);//friction
-		shape1.w_matrix = shape1.w_matrix * glm::translate(shape1.velocity / (1 / deltaTime)) * glm::mat4(1.0f);//added time
+
+		shape1.w_matrix = glm::translate(shape1.possition) * glm::translate(shape1.velocity / (1 / deltaTime)) * glm::rotate(shape1.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f)) * glm::rotate(shape1.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(shape1.scale) * glm::mat4(1.0f);//added time
+
 		if (shape1.mass != 0) {
 			shape1.w_matrix[3][0] += shape1.correction.x;
 			shape1.w_matrix[3][1] += shape1.correction.y;
@@ -1084,7 +1307,9 @@ void updateSceneElements() {
 			//cout << shape1.correction.x << " " << shape1.correction.y << " " << shape1.correction.z << " \n";
 			shape1.correction = glm::vec3(0.0f);
 		}
-		
+
+		shape1.possition = getposition(shape1);
+
 	}
 
 	
@@ -1208,6 +1433,17 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 
 	}
 	
+
+	if (keyStatus[GLFW_KEY_B] == true) {
+		flock.useTarget = false;
+		flock2.useTarget = false;
+
+	}
+	if (keyStatus[GLFW_KEY_V] == true) {
+		flock.useTarget = true;
+		flock2.useTarget = true;
+
+	}
 
 	// toggle showing mouse.
 	if (keyStatus[GLFW_KEY_M]) {
