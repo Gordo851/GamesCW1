@@ -1423,7 +1423,7 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 		ApplyForce(myCube, force);
 	}
 	if (keyStatus[GLFW_KEY_O] == true) {
-		glm::vec3 force = glm::vec3(0.0f, 0.1f, 0.0f);
+		glm::vec3 force = glm::vec3(0.0f, 0.3f, 0.0f);
 		ApplyForce(myCube, force);
 
 	}
