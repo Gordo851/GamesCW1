@@ -42,9 +42,17 @@ public:
 	GLfloat			cameraPitch = -90.0f;	// start centered
 	GLfloat			cameraLastX = (GLfloat)windowWidth / 2.0f;	// start middle screen
 	GLfloat			cameraLastY = (GLfloat)windowHeight / 2.0f;	// start middle screen
+	//Boids
+	/*
 	glm::vec3		cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 	glm::vec3		cameraPosition = glm::vec3(0.0f, 30.0f, -5.0f);
-	glm::vec3		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f); 
+	glm::vec3		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	*/
+
+	//Map
+	glm::vec3		cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3		cameraPosition = glm::vec3(10.0f, 20.0f, -5.0f);
+	glm::vec3		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 	int				mouseX = windowWidth/2;
 	int				mouseY = windowHeight/2;

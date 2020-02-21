@@ -27,6 +27,7 @@ using namespace std;
 #include "shapes.h"
 #include "Search.h"
 #include "boidFlock.h"
+#include "Windows.h"
 
 // MAIN FUNCTIONS
 void startup();
@@ -81,14 +82,14 @@ Arrow       arrowZ;
 Cube        myFloor;
 Line        myLine;
 Cylinder    myCylinder;
-Cube cubeArray[10][10];
-//////////////////////////////////////check
-Cube myPlayer;
+//Cube cubeArray[10][10];
+
+Particle myPlayer;
 Cube myTarget;
-float playerX = 0.0;
-float playerY = 0.0;
-float targetX = 0.0;
-float targetY = 0.0;
+float playerX = 1.0;
+float playerY = 1.0;
+float targetX = 17.0;
+float targetY = 11.0;
 //////////////////////////////////////
 vector<Shapes*> allShapes;
 vector<Collision*> allCollisions;
@@ -115,7 +116,6 @@ Node node[400];
 vector<Node*> allNodes;
 vector<glm::vec2> path;
 vector<glm::vec2> availableIndexes;
-Cube  ShowSearchcubeArray[10];
 
 int main()
 {
@@ -170,7 +170,7 @@ void DrawMapOnScreen()
 			{
 				mapCubeArray[x][z].Load();
 				mapCubeArray[x][z].mass = 0.0f;
-				mapCubeArray[x][z].collision_type = AAcube;
+				mapCubeArray[x][z].collision_type = none;
 				mapCubeArray[x][z].w_matrix =
 					glm::translate(glm::vec3(0.0f+x, 0.5f, 0.0f+z)) *
 					glm::mat4(1.0f);
@@ -215,14 +215,14 @@ void CreateMap()
 		}
 	}
 }
-void movePlayer(int x, int y)
+void movePlayer(float x, float y)
 {
 	playerX = x;
 	playerY = y;
-	myPlayer.w_matrix =
-		glm::translate(glm::vec3(playerX, 0.5f, playerY)) *
+	myPlayer.w_matrix = glm::translate(glm::vec3(playerX, 0.5f, playerY)) *
 		glm::mat4(1.0f);
 	myPlayer.velocity = (glm::vec3(0.0f, 0.0f, 0.0f));
+	cout << playerX << " " << playerY << "\n";
 }
 void createSearchGraph()
 {
@@ -275,45 +275,9 @@ Node findNodesByIndex(glm::vec2 index)
 	}
 }
 
-
-
 void showSearch()
 {
-	glm::vec3 translationZero = glm::vec3(0, 0, 0);
-	for (int i = 0; i < availableIndexes.size(); i++)
-	{
-		int x = availableIndexes[i][0];
-		int y = availableIndexes[i][1];
-		ShowSearchcubeArray[i].w_matrix =
-			glm::translate(glm::vec3(x, 0.5f, y)) *
-			glm::mat4(1.0f);
-		ShowSearchcubeArray[i].velocity = (glm::vec3(0.0f, 0.0f, 0.0f));
-	}
-	// Update the camera transform based on interactive inputs or by following a predifined path.
-	updateCamera();
 
-	// Update position, orientations and any other relevant visual state of any dynamic elements in the scene.
-	updateSceneElements();
-
-	// Render a still frame into an off-screen frame buffer known as the backbuffer.
-	renderScene();
-	// Swap the back buffer with the front buffer, making the most recently rendered image visible on-screen.
-	glfwSwapBuffers(myGraphics.window);        // swap buffers (avoid flickering and tearing)
-	//Sleep(100);
-	for (int i = 0; i < availableIndexes.size(); i++)
-	{
-		ShowSearchcubeArray[i].w_matrix* glm::translate(translationZero);
-	}
-	// Update the camera transform based on interactive inputs or by following a predifined path.
-	updateCamera();
-
-	// Update position, orientations and any other relevant visual state of any dynamic elements in the scene.
-	updateSceneElements();
-
-	// Render a still frame into an off-screen frame buffer known as the backbuffer.
-	renderScene();
-	// Swap the back buffer with the front buffer, making the most recently rendered image visible on-screen.
-	glfwSwapBuffers(myGraphics.window);        // swap buffers (avoid flickering and tearing)
 }
 void showChosenNode(Node nodeChosen)
 {
@@ -479,7 +443,7 @@ void searchGraph()
 		}
 	}
 	path.insert(path.begin(), currentNode.index);
-	std::cout << "Search complete";
+	cout << "Search complete";
 }
 void moveAlongPath()
 {
@@ -499,7 +463,8 @@ void moveAlongPath()
 		renderScene();
 		// Swap the back buffer with the front buffer, making the most recently rendered image visible on-screen.
 		glfwSwapBuffers(myGraphics.window);        // swap buffers (avoid flickering and tearing)
-		//Sleep(100);
+
+		Sleep(100);
 	}
 }
 
@@ -517,7 +482,7 @@ void ApplyForce(Shapes& shape, glm::vec3 force)
 
 void calculateRebound(Shapes& a, Shapes& b, glm::vec3 normal) {
 
-	float e = std::min(a.e, b.e);
+	float e = min(a.e, b.e);
 
 	if (b.mass == 0) {//shape 2 static
 		glm::vec3 phat = (e + 1.0f) * a.mass * (a.velocity * normal) * normal;
@@ -581,7 +546,7 @@ void PositionalCorrection(Shapes& a, Shapes& b, float penetration, glm::vec3 nor
 	float percent = 0.8f; // usually 20% to 80%
 	float slop = 0.01f; // usually 0.01 to 0.1
 
-	glm::vec3 correction = (std::max((penetration - slop), 0.0f) / (a.invMass + b.invMass)) * percent * normal;
+	glm::vec3 correction = (max((penetration - slop), 0.0f) / (a.invMass + b.invMass)) * percent * normal;
 
 	a.correction -= a.invMass * correction;
 	b.correction += b.invMass * correction;
@@ -1089,45 +1054,41 @@ void startup() {
 	
 
 	//load up boids
-	setupBoids();
+	//setupBoids();
 
 	//Load and draw map for A*
-	//CreateMap();
-	//DrawMapOnScreen();
+	CreateMap();
+	DrawMapOnScreen();
 
 
 	//Load and draw player to show search path
-	/*
-	myPlayer.Load();
-	myPlayer.mass = 1;
-	myPlayer.w_matrix = glm::translate(glm::vec3(playerX, 0.0f, playerY)) *
-		glm::mat4(1.0f);
-	allShapes.push_back(&myPlayer);
-	myPlayer.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); 
 	
+	myPlayer.Load();
+	myPlayer.collision_type = sphere;
+	myPlayer.mass = 0;
+	myPlayer.invMass = 0;
+	myPlayer.w_matrix = glm::translate(glm::vec3(playerX, 0.5f, playerY)) *
+		glm::mat4(1.0f);
+	myPlayer.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+	allShapes.push_back(&myPlayer);
+	
+
+
+
+
+
 	//Load a target cube (red) and cubes to show the available nodes in a search
 	myTarget.Load();
-	myTarget.collision_type = AAcube;
+	myTarget.collision_type = none;
 	myTarget.w_matrix =
 		glm::translate(glm::vec3(targetX, 0.5f, targetY)) *
 		glm::mat4(1.0f);
 	myTarget.mass = 0.0f;
 	myTarget.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	allShapes.push_back(&myTarget);
-
-	for (int x = 0; x < 10; x += 1) {
-		ShowSearchcubeArray[x].Load();
-		ShowSearchcubeArray[x].collision_type = AAcube;
-		ShowSearchcubeArray[x].mass = 1.0f;
-		ShowSearchcubeArray[x].w_matrix =
-			glm::translate(glm::vec3(x, 0.5f, 1.0f)) *
-			glm::mat4(1.0f);
-		ShowSearchcubeArray[x].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		allShapes.push_back(&ShowSearchcubeArray[x]);
-	}
-	*/
-	// Load Geometry examples
 	
+	// Load Geometry examples
+	/*
 	myCube.Load();
 	myCube.collision_type = AAcube;
 
@@ -1172,6 +1133,7 @@ void startup() {
 	myCylinder.fillColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
 	myCylinder.lineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
+	
 	for (int x = 0; x < 5; x += 1) {
 		for (int z = 0; z < 5; z += 1) {
 
@@ -1188,11 +1150,12 @@ void startup() {
 		}
 	}
 
-
+	*/
 	arrowX.Load(); arrowY.Load(); arrowZ.Load();
 	arrowX.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); arrowX.lineColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	arrowY.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); arrowY.lineColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 	arrowZ.fillColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); arrowZ.lineColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+
 
 	myFloor.Load();
 	myFloor.w_matrix =
@@ -1276,7 +1239,7 @@ void updateSceneElements() {
 
 	glfwPollEvents();                                // poll callbacks
 	
-	boidUpdate();
+	//boidUpdate();
 	applyGravity();
 	checkCollisions(); // check collistion
 
