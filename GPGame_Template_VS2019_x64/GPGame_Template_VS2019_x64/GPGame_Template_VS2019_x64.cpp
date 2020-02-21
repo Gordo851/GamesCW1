@@ -94,12 +94,13 @@ float targetY = 11.0;
 vector<Shapes*> allShapes;
 vector<Collision*> allCollisions;
 
+Cube  cubeArray[10][10];
 
 boidFlock flock;
-Boid boidArray[100];
+Boid boidArray[50];
 
 boidFlock flock2;
-Boid boidArray2[100];
+Boid boidArray2[50];
 
 
 vector<Particle*> allParticles;
@@ -169,13 +170,19 @@ void DrawMapOnScreen()
 			if (mapArray[x][z] == 1) 
 			{
 				mapCubeArray[x][z].Load();
+				mapCubeArray[x][z].collision_type = AAcube;
 				mapCubeArray[x][z].mass = 0.0f;
-				mapCubeArray[x][z].collision_type = none;
+				mapCubeArray[x][z].invMass = 0.0f;
+				
 				mapCubeArray[x][z].w_matrix =
-					glm::translate(glm::vec3(0.0f+x, 0.5f, 0.0f+z)) *
+					glm::translate(glm::vec3(x, 0.5, z)) *
 					glm::mat4(1.0f);
 				mapCubeArray[x][z].fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 				allShapes.push_back(&mapCubeArray[x][z]);
+
+			}
+			else {
+				mapCubeArray[x][z].collision_type = none;
 			}
 		}
 	}
@@ -219,8 +226,8 @@ void movePlayer(float x, float y)
 {
 	playerX = x;
 	playerY = y;
-	myPlayer.w_matrix = glm::translate(glm::vec3(playerX, 0.5f, playerY)) *
-		glm::mat4(1.0f);
+	myPlayer.possition = glm::vec3(playerX, 0.5f, playerY);
+	
 	myPlayer.velocity = (glm::vec3(0.0f, 0.0f, 0.0f));
 	cout << playerX << " " << playerY << "\n";
 }
@@ -491,7 +498,7 @@ void calculateRebound(Shapes& a, Shapes& b, glm::vec3 normal) {
 	}
 	else if (a.mass == 0) {//shape 1 static
 		glm::vec3 phat = (e + 1.0f) * b.mass * (b.velocity * normal) * normal;
-		b.velocity = b.velocity + (((phat) / b.mass));
+		b.velocity = b.velocity - (((phat) / b.mass));
 		//std::cout << "shape 1 static \n";
 	}
 	else {
@@ -596,6 +603,10 @@ void calculateMinMax(Shapes& shape) {
 
 
 bool isColliding(Shapes& shape1, Shapes& shape2) {
+
+	if (shape1.mass == 0 && shape2.mass == 0) {
+		return false;
+	}
 
 	if (shape1.collision_type == none || shape2.collision_type == none) {
 		return false;
@@ -807,9 +818,6 @@ void getAACubeNormal(Shapes& a, Shapes& b) {
 	overlap = (((a.max - a.min) / 2.0f) + ((b.max - b.min) / 2.0f)) - abs(xyzDiss);
 
 
-
-
-
 	if (overlap.x < overlap.y) {
 		if (overlap.x < overlap.z) {
 			if (xyzDiss.x < 0) {
@@ -942,16 +950,6 @@ void applyGravity() {
 
 
 
-
-
-
-
-
-
-
-
-
-
 //////////boid stuff goes here//////////////
 
 
@@ -989,7 +987,7 @@ void setupBoids() {
 		boidArray2[x].mass = 0.01f;
 		boidArray2[x].invMass = 100.0f;
 		boidArray2[x].velocity = glm::vec3(0.1f);
-		boidArray2[x].speed = 1.0f;
+		boidArray2[x].speed = 2.0f;
 		boidArray2[x].colour = glm::vec3(0.5f, 0.5f, 0.5f);
 		boidArray2[x].fillColor = glm::vec4(0.5f, 0.5f, 0.0f, 1.0f);
 		flock2.useTarget = true;
@@ -1022,15 +1020,6 @@ void boidUpdate() {
 
 
 
-
-
-
-
-
-
-
-
-
 ///////////////start uo/////////////////
 
 
@@ -1054,7 +1043,7 @@ void startup() {
 	
 
 	//load up boids
-	//setupBoids();
+	setupBoids();
 
 	//Load and draw map for A*
 	CreateMap();
@@ -1088,7 +1077,19 @@ void startup() {
 	allShapes.push_back(&myTarget);
 	
 	// Load Geometry examples
-	/*
+	myCube2.Load();
+	myCube2.mass = 1.0f;
+	myCube2.invMass = 1.0f;
+	myCube2.w_matrix =
+		glm::translate(glm::vec3(-4.0f, 1.0f, 2.0f)) *
+		glm::scale(glm::vec3(1.5f, 1.5f, 1.5f)) *
+		glm::mat4(1.0f);
+	myCube2.collision_type = AAcube;
+	myCube2.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	allShapes.push_back(&myCube2);
+	myCube2.scale = glm::vec3(1.5, 1.5, 1.5);
+
+
 	myCube.Load();
 	myCube.collision_type = AAcube;
 
@@ -1100,21 +1101,12 @@ void startup() {
 	myCube.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	allShapes.push_back(&myCube);
 
+	
 
-	myCube2.Load();
-	myCube2.mass = 0.0f;
-	myCube2.invMass = 0.0f;
-	myCube2.w_matrix =
-		glm::translate(glm::vec3(-4.0f, 2.0f, 4.0f)) *
-		glm::scale(glm::vec3(1.5f, 1.5f, 1.5f)) *
-		glm::mat4(1.0f);
-	myCube2.collision_type = AAcube;
-	myCube2.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	allShapes.push_back(&myCube2);
-	myCube2.scale = glm::vec3(1.5, 1.5, 1.5);
+
 
 	//
-
+	/*
 	mySphere.Load();
 	mySphere.collision_type = AAcube;
 	mySphere.w_matrix = glm::translate(glm::vec3(-2.0f, 1.0f, -3.0f)) *
@@ -1132,25 +1124,25 @@ void startup() {
 	allShapes.push_back(&myCylinder);
 	myCylinder.fillColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
 	myCylinder.lineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-
+	*/
 	
-	for (int x = 0; x < 5; x += 1) {
-		for (int z = 0; z < 5; z += 1) {
+	for (int x = 0; x < 3; x += 1) {
+		for (int z = 0; z < 2; z += 1) {
 
 			cubeArray[x][z].Load();
 			cubeArray[x][z].collision_type = AAcube;
 			//cubeArray[x][z].radius = 0.5f;
-			cubeArray[x][z].mass = 0.0f;
-			cubeArray[x][z].invMass = 0.0f;
+			cubeArray[x][z].mass = 1.0f;
+			cubeArray[x][z].invMass = 1.0f;
 			cubeArray[x][z].w_matrix =
-				glm::translate(glm::vec3((2 + x * 2.0f), 2.00001f * z + 1, 5.0f - x)) *
+				glm::translate(glm::vec3((-9 + z * 2 ), 3 + x * 2 , 5)) *
 				glm::mat4(1.0f);
 			cubeArray[x][z].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 			allShapes.push_back(&cubeArray[x][z]);
 		}
 	}
 
-	*/
+	
 	arrowX.Load(); arrowY.Load(); arrowZ.Load();
 	arrowX.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); arrowX.lineColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	arrowY.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); arrowY.lineColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
@@ -1180,8 +1172,16 @@ void startup() {
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		Shapes& shape1 = *allShapes[i];
+		if (shape1.mass == 0) {
+			shape1.invMass = 0;
+		}
+
+		else {
+			shape1.invMass = 1 / shape1.mass;
+		}
 		shape1.possition = getposition(shape1);
 		calculateMinMax(shape1);
+
 
 	}
 
@@ -1239,7 +1239,7 @@ void updateSceneElements() {
 
 	glfwPollEvents();                                // poll callbacks
 	
-	//boidUpdate();
+	boidUpdate();
 	applyGravity();
 	checkCollisions(); // check collistion
 
@@ -1259,6 +1259,8 @@ void updateSceneElements() {
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		Shapes& shape1 = *allShapes[i];
+
+
 		shape1.velocity = shape1.velocity - (shape1.velocity * 0.1f) / (1 / deltaTime);//friction
 
 		shape1.w_matrix = glm::translate(shape1.possition) * glm::translate(shape1.velocity / (1 / deltaTime)) * glm::rotate(shape1.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f)) * glm::rotate(shape1.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(shape1.scale) * glm::mat4(1.0f);//added time
