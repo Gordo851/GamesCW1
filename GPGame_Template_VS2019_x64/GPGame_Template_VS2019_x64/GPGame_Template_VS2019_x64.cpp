@@ -112,6 +112,7 @@ float t = 0.001f;            // Global variable for animation
 //Search Variables
 int mapArray[20][20];
 Cube  mapCubeArray[20][20];
+Cube  showSearchCubeArray[20][20];
 Node node[400];
 vector<Node*> allNodes;
 vector<glm::vec2> path;
@@ -166,19 +167,36 @@ void DrawMapOnScreen()
 
 	for (int x = 0; x < 20; x += 1) {
 		for (int z = 0; z < 20; z += 1) {
-			if (mapArray[x][z] == 1) 
+			if (mapArray[x][z] == 1)
 			{
 				mapCubeArray[x][z].Load();
 				mapCubeArray[x][z].mass = 0.0f;
 				mapCubeArray[x][z].collision_type = none;
 				mapCubeArray[x][z].w_matrix =
-					glm::translate(glm::vec3(0.0f+x, 0.5f, 0.0f+z)) *
+					glm::translate(glm::vec3(0.0f + x, 0.5f, 0.0f + z)) *
 					glm::mat4(1.0f);
 				mapCubeArray[x][z].fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 				allShapes.push_back(&mapCubeArray[x][z]);
 			}
 		}
 	}
+	
+	for (int x = 0; x < 20; x += 1) {
+		for (int z = 0; z < 20; z += 1) {
+			{
+				showSearchCubeArray[x][z].Load();
+				showSearchCubeArray[x][z].mass = 0.0f;
+				showSearchCubeArray[x][z].collision_type = none;
+				showSearchCubeArray[x][z].w_matrix =
+					glm::translate(glm::vec3(0.0f + x, 0.01f, 0.0f + z)) *
+					glm::mat4(1.0f);
+				showSearchCubeArray[x][z].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+				showSearchCubeArray[x][z].lineColor = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+				allShapes.push_back(&showSearchCubeArray[x][z]);
+			}
+		}
+	}
+	
 }
 void CreateMap()
 {
@@ -219,8 +237,7 @@ void movePlayer(float x, float y)
 {
 	playerX = x;
 	playerY = y;
-	myPlayer.w_matrix = glm::translate(glm::vec3(playerX, 0.5f, playerY)) *
-		glm::mat4(1.0f);
+	myPlayer.possition = glm::vec3(playerX, 0.5f, playerY);
 	myPlayer.velocity = (glm::vec3(0.0f, 0.0f, 0.0f));
 	cout << playerX << " " << playerY << "\n";
 }
@@ -277,11 +294,32 @@ Node findNodesByIndex(glm::vec2 index)
 
 void showSearch()
 {
+	for (int i = 0; i < availableIndexes.size(); i++)
+	{
+		int x = availableIndexes[i][0];
+		int y = availableIndexes[i][1];
+		showSearchCubeArray[x][y].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
+	}
+	// Update the camera transform based on interactive inputs or by following a predifined path.
+	updateCamera();
+
+	// Update position, orientations and any other relevant visual state of any dynamic elements in the scene.
+	updateSceneElements();
+
+	// Render a still frame into an off-screen frame buffer known as the backbuffer.
+	renderScene();
+	// Swap the back buffer with the front buffer, making the most recently rendered image visible on-screen.
+	glfwSwapBuffers(myGraphics.window);        // swap buffers (avoid flickering and tearing
+	Sleep(100);
 
 }
 void showChosenNode(Node nodeChosen)
 {
-
+	glm::vec2 position = nodeChosen.index;
+	int x = position[0];
+	int y = position[1];
+	showSearchCubeArray[x][y].fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	
 }
 void searchGraph()
 {
@@ -295,9 +333,7 @@ void searchGraph()
 	glm::vec2 indexToAddToUsed;
 	int x = 0;
 	while (currentNode.index != targetNode.index)
-//	while (x < 20)
 	{
-		pathCost += 1;
 		if (currentNode.travelUp == true)
 		{
 			bool add = true;
@@ -325,7 +361,6 @@ void searchGraph()
 					if (child.index == possibleNodeIndex)
 					{
 						child.parent = currentNode.index;
-						child.pathCost = pathCost + 1;
 					}
 				}
 			}
@@ -350,7 +385,6 @@ void searchGraph()
 					if (child.index == possibleNodeIndex)
 					{
 						child.parent = currentNode.index;
-						child.pathCost = pathCost + 1;
 					}
 				}
 			}
@@ -375,7 +409,6 @@ void searchGraph()
 					if (child.index == possibleNodeIndex)
 					{
 						child.parent = currentNode.index;
-						child.pathCost = pathCost + 1;
 					}
 				}
 			}
@@ -400,7 +433,6 @@ void searchGraph()
 					if (child.index == possibleNodeIndex)
 					{
 						child.parent = currentNode.index;
-						child.pathCost = pathCost + 1;
 					}
 				}
 			}
@@ -412,7 +444,23 @@ void searchGraph()
 		{
 			glm::vec2 indexHere = availableIndexes[i];
 			Node possibleNext = findNodesByIndex(indexHere);
-			float costOfPossible = possibleNext.HeuristicCost + possibleNext.pathCost;
+			Node childNode = possibleNext;
+			while (childNode.index != glm::vec2(1, 1))
+			{
+				path.insert(path.begin(), childNode.index);
+				for (int i = 0; i < allNodes.size(); i++)
+				{
+					Node& myParent = *allNodes[i];
+					if (myParent.index == childNode.parent)
+					{
+						childNode = myParent;
+					}
+				}
+			}
+			pathCost = path.size();
+			cout << pathCost << "\n";
+			path.clear();
+			float costOfPossible = possibleNext.HeuristicCost + pathCost;
 			if (costOfPossible < totalCost)
 			{
 				totalCost = costOfPossible;
@@ -420,6 +468,7 @@ void searchGraph()
 				indexToAddToUsed = indexHere;
 				indexToBeDeleted = i;
 			}
+
 		}
 
 

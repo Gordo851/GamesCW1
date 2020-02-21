@@ -39,7 +39,7 @@ public:
 	// Camera
 	bool			cameraFirstMouse = true;
 	GLfloat			cameraYaw = 90.0f;	// init pointing to inside
-	GLfloat			cameraPitch = -90.0f;	// start centered
+	GLfloat			cameraPitch = -50.0f;	// start centered
 	GLfloat			cameraLastX = (GLfloat)windowWidth / 2.0f;	// start middle screen
 	GLfloat			cameraLastY = (GLfloat)windowHeight / 2.0f;	// start middle screen
 	//Boids
