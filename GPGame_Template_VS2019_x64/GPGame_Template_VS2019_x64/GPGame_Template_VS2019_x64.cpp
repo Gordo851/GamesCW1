@@ -29,6 +29,11 @@ using namespace std;
 #include "boidFlock.h"
 #include "Windows.h"
 
+bool aStarSearch = false;
+bool boidAreAGo = true;
+bool explosions = false;
+bool fountains = false;
+
 // MAIN FUNCTIONS
 void startup();
 void updateCamera();
@@ -67,7 +72,8 @@ bool        quit = false;
 float       deltaTime = 0.0f;    // Keep track of time per frame.
 float       lastTime = 0.0f;    // variable to keep overall time.
 bool        keyStatus[1024];    // Hold key status.
-bool		mouseEnabled = true; // keep track of mouse toggle.
+bool		mouseEnabled = true; // keep track of mouse toggle
+
 
 // MAIN GRAPHICS OBJECT
 Graphics    myGraphics;        // Runing all the graphics in this object
@@ -104,14 +110,20 @@ Boid boidArray2[50];
 
 
 vector<Particle*> allParticles;
+Cube myParticleCube;
 Particle particleArray[20];
 Particle particle;
-
+int counter = 0;
+int lengthToReset = 110;
+int fountainNumber = 0;
+int frameNumber = 0;
+bool letsExplode = false;
 // Some global variable to do the animation.
 float t = 0.001f;            // Global variable for animation
 
 //Search Variables
 int mapArray[20][20];
+int showMapArray[20][20];
 Cube  mapCubeArray[20][20];
 Cube  showSearchCubeArray[20][20];
 Node node[400];
@@ -191,15 +203,18 @@ void DrawMapOnScreen()
 	for (int x = 0; x < 20; x += 1) {
 		for (int z = 0; z < 20; z += 1) {
 			{
-				showSearchCubeArray[x][z].Load();
-				showSearchCubeArray[x][z].mass = 0.0f;
-				showSearchCubeArray[x][z].collision_type = none;
-				showSearchCubeArray[x][z].w_matrix =
-					glm::translate(glm::vec3(0.0f + x, 0.01f, 0.0f + z)) *
-					glm::mat4(1.0f);
-				showSearchCubeArray[x][z].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-				showSearchCubeArray[x][z].lineColor = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-				allShapes.push_back(&showSearchCubeArray[x][z]);
+				if (showMapArray[x][z] == 1)
+				{
+					showSearchCubeArray[x][z].Load();
+					showSearchCubeArray[x][z].mass = 0.0f;
+					showSearchCubeArray[x][z].collision_type = none;
+					showSearchCubeArray[x][z].w_matrix =
+						glm::translate(glm::vec3(0.0f + x, 0.01f, 0.0f + z)) *
+						glm::mat4(1.0f);
+					showSearchCubeArray[x][z].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+					showSearchCubeArray[x][z].lineColor = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+					allShapes.push_back(&showSearchCubeArray[x][z]);
+				}
 			}
 		}
 	}
@@ -217,10 +232,13 @@ void CreateMap()
 			if (random > 0.7f)
 			{
 				mapArray[x][y] = 1;
+				showMapArray[x][y] = 0;
+
 			}
 			else
 			{
 				mapArray[x][y] = 0;
+				showMapArray[x][y] = 1;
 			}
 		}
 	}
@@ -230,6 +248,7 @@ void CreateMap()
 		for (int y = 0; y < 20; y += 19)
 		{
 			mapArray[x][y] = 1;
+			showMapArray[x][y] = 0;
 		}
 	}
 	for (int x = 0; x < 20; x += 19)
@@ -237,6 +256,7 @@ void CreateMap()
 		for (int y = 0; y < 20; y++)
 		{
 			mapArray[x][y] = 1;
+			showMapArray[x][y] = 0;
 		}
 	}
 }
@@ -298,7 +318,6 @@ Node findNodesByIndex(glm::vec2 index)
 		}
 	}
 }
-
 void showSearch()
 {
 	for (int i = 0; i < availableIndexes.size(); i++)
@@ -994,8 +1013,85 @@ void applyGravity() {
 	}
 
 }
-	/////////////particles stuff goes here//////////
-
+/////////////particles stuff goes here//////////
+void CreateParticles() {
+	for (int x = 0; x < size(particleArray); x += 1) {
+		particleArray[x].Load();
+		particleArray[x].collision_type = sphere;
+		particleArray[x].w_matrix =
+			glm::translate(glm::vec3(1+x, -1.0f, 0.0f)) *
+			glm::mat4(1.0f);
+		particleArray[x].mass = 0.1f;
+		particleArray[x].fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		allShapes.push_back(&particleArray[x]);
+		allParticles.push_back(&particleArray[x]);
+	}
+}
+void ResetParticles() {
+	for (int x = 0; x < size(particleArray); x += 1) {
+		particleArray[x].possition = (glm::vec3(0.1f * x, 1.0f, 1.0f));
+		particleArray[x].toRender = true;
+		particleArray[x].DeathCount = 100;
+	}
+}
+void DestoryParticles(Particle& shape1) {
+	shape1.toRender = false;
+}
+void setUpRandomExplosion() {
+	ResetParticles();
+	for (int i = 0; i < allParticles.size(); i++)
+	{
+		Particle& shape1 = *allParticles[i];
+		for (int a = 0; a < 5; a++)
+		{
+			for (int b = 1; b < 5; b++)
+			{
+				shape1.possition = glm::vec3(a, 5, b);
+				shape1.velocity = glm::vec3(0.0f);
+			}
+		}
+	}
+	letsExplode = true;
+}
+void moveParticlesRandomExplosion() {
+	for (int h = 0; h < allParticles.size(); h++)
+	{
+		Particle& shape1 = *allParticles[h];
+		float MAX = 2.0f;
+		float x = 1 - static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / MAX));
+		float y = 1 - static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / MAX));
+		float z = 1 - static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / MAX));
+		glm::vec3 force = glm::vec3(x, y, z);
+		ApplyForce(shape1, force);
+	}
+}
+void fountainParticles() {
+	float MAX = 1.0f;
+	Particle& shape1 = *allParticles[fountainNumber];
+	shape1.possition = glm::vec3(1, 1.5f, 1);
+	shape1.velocity = glm::vec3(0.0f);
+	float x = -0.5f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / MAX));
+	float y = 1.0f;
+	float z = -0.5f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / MAX));
+	glm::vec3 force = glm::vec3(x, y, z);
+	ApplyForce(shape1, force);
+	fountainNumber += 1;
+	if (fountainNumber == 20)
+	{
+		fountainNumber = 0;
+	}
+}
+void CountParticlesToDeath() {
+	for (int i = 0; i < allParticles.size(); i++)
+	{
+		Particle& shape1 = *allParticles[i];
+		shape1.DeathCount -= 1;
+		if (shape1.DeathCount == 0)
+		{
+			DestoryParticles(*allParticles[i]);
+		}
+	}
+}
 
 
 
@@ -1090,41 +1186,40 @@ void startup() {
 	myGraphics.aspect = (float)myGraphics.windowWidth / (float)myGraphics.windowHeight;
 	myGraphics.proj_matrix = glm::perspective(glm::radians(50.0f), myGraphics.aspect, 0.1f, 1000.0f);
 	
+	if (explosions == true || fountains == true) {
+		CreateParticles();
+	}
 
-	//load up boids
-	setupBoids();
+	if (boidAreAGo == true) {
+		//load up boids
+		setupBoids();
+	}
 
-	//Load and draw map for A*
-	CreateMap();
-	DrawMapOnScreen();
+	if (aStarSearch == true) {
+		//Load and draw map for A*
+		CreateMap();
+		DrawMapOnScreen();
+		//Load and draw player to show search path
 
+		myPlayer.Load();
+		myPlayer.collision_type = sphere;
+		myPlayer.mass = 0;
+		myPlayer.invMass = 0;
+		myPlayer.w_matrix = glm::translate(glm::vec3(playerX, 0.5f, playerY)) *
+			glm::mat4(1.0f);
+		myPlayer.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+		allShapes.push_back(&myPlayer);
+		//Load a target cube (red) and cubes to show the available nodes in a search
+		myTarget.Load();
+		myTarget.collision_type = none;
+		myTarget.w_matrix =
+			glm::translate(glm::vec3(targetX, 0.5f, targetY)) *
+			glm::mat4(1.0f);
+		myTarget.mass = 0.0f;
+		myTarget.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		allShapes.push_back(&myTarget);
 
-	//Load and draw player to show search path
-	
-	myPlayer.Load();
-	myPlayer.collision_type = sphere;
-	myPlayer.mass = 0;
-	myPlayer.invMass = 0;
-	myPlayer.w_matrix = glm::translate(glm::vec3(playerX, 0.5f, playerY)) *
-		glm::mat4(1.0f);
-	myPlayer.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-	allShapes.push_back(&myPlayer);
-	
-
-
-
-
-
-	//Load a target cube (red) and cubes to show the available nodes in a search
-	myTarget.Load();
-	myTarget.collision_type = none;
-	myTarget.w_matrix =
-		glm::translate(glm::vec3(targetX, 0.5f, targetY)) *
-		glm::mat4(1.0f);
-	myTarget.mass = 0.0f;
-	myTarget.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	allShapes.push_back(&myTarget);
-	
+	}
 	// Load Geometry examples
 	myCube2.Load();
 	myCube2.mass = 1.0f;
@@ -1233,7 +1328,19 @@ void startup() {
 
 
 	}
+	if (fountains == true) {
+		myParticleCube.Load();
+		myParticleCube.collision_type = none;
 
+		myParticleCube.w_matrix =
+			glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
+			glm::mat4(1.0f);
+		myParticleCube.possition = glm::vec3(1, 0.5, 1);
+		myParticleCube.mass = 0.0f;
+		myParticleCube.invMass = 0.0f;
+		myParticleCube.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		allShapes.push_back(&myParticleCube);
+	}
 	// Optimised Graphics
 	myGraphics.SetOptimisations();        // Cull and depth testing
 
@@ -1287,15 +1394,27 @@ void updateCamera() {
 void updateSceneElements() {
 
 	glfwPollEvents();                                // poll callbacks
-	
+	CountParticlesToDeath();
 	boidUpdate();
 	applyGravity();
 	checkCollisions(); // check collistion
-
-
-
-
-
+	if (fountains == true) {
+		if (frameNumber % 3 == 0) {
+			fountainParticles();
+			frameNumber = 0;
+		}
+		frameNumber += 1;
+	}
+	if (fountains == true || explosions == true) {
+		if (counter == lengthToReset) {
+			ResetParticles();
+			counter = 0;
+		}
+		counter += 1;
+	}
+	if (letsExplode == true) {
+		moveParticlesRandomExplosion();
+	}
 	// Calculate frame time/period -- used for all (physics, animation, logic, etc).
 	GLfloat currentTime = (GLfloat)glfwGetTime();    // retrieve timelapse
 	deltaTime = currentTime - lastTime;                // Calculate delta time
@@ -1332,7 +1451,6 @@ void updateSceneElements() {
 		Shapes& shape1 = *allShapes[i];
 		shape1.mv_matrix = myGraphics.viewMatrix * shape1.w_matrix;
 		shape1.proj_matrix = myGraphics.proj_matrix;
-
 	}
 
 
@@ -1393,7 +1511,9 @@ void renderScene() {
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		Shapes& shape1 = *allShapes[i];
-		shape1.Draw();
+		if (shape1.toRender == true) {
+			shape1.Draw();
+		}
 	}
 	//myFloor.Draw();
 	arrowX.Draw();
@@ -1447,18 +1567,18 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 
 	}
 	
+	if (boidAreAGo == true) {
+		if (keyStatus[GLFW_KEY_B] == true) {
+			flock.useTarget = false;
+			flock2.useTarget = false;
 
-	if (keyStatus[GLFW_KEY_B] == true) {
-		flock.useTarget = false;
-		flock2.useTarget = false;
+		}
+		if (keyStatus[GLFW_KEY_V] == true) {
+			flock.useTarget = true;
+			flock2.useTarget = true;
 
+		}
 	}
-	if (keyStatus[GLFW_KEY_V] == true) {
-		flock.useTarget = true;
-		flock2.useTarget = true;
-
-	}
-
 	// toggle showing mouse.
 	if (keyStatus[GLFW_KEY_M]) {
 		mouseEnabled = !mouseEnabled;
@@ -1468,27 +1588,37 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 	
-	//Keys to move player, start search and then have player move along the returned path
-	if (keyStatus[GLFW_KEY_KP_8]) {
-		movePlayer(0, 1);
+	if (aStarSearch == true) {
+		//Keys to move player, start search and then have player move along the returned path
+		if (keyStatus[GLFW_KEY_KP_8]) {
+			movePlayer(0, 1);
+		}
+		if (keyStatus[GLFW_KEY_KP_4]) {
+			movePlayer(1, 0);
+		}
+		if (keyStatus[GLFW_KEY_KP_6]) {
+			movePlayer(-1, 0);
+		}
+		if (keyStatus[GLFW_KEY_KP_5]) {
+			movePlayer(0, -1);
+		}
+		if (keyStatus[GLFW_KEY_KP_7]) {
+			createSearchGraph();
+		}
+		if (keyStatus[GLFW_KEY_KP_9]) {
+			moveAlongPath();
+		}
 	}
-	if (keyStatus[GLFW_KEY_KP_4]) {
-		movePlayer(1, 0);
+	if (fountains == true) {
+		if (keyStatus[GLFW_KEY_KP_0]) {
+			fountainParticles();
+		}
 	}
-	if (keyStatus[GLFW_KEY_KP_6]) {
-		movePlayer(-1, 0);
+	if (explosions == true) {
+		if (keyStatus[GLFW_KEY_KP_2]) {
+			setUpRandomExplosion();
+		}
 	}
-	if (keyStatus[GLFW_KEY_KP_5]) {
-		movePlayer(0, -1);
-	}
-
-	if (keyStatus[GLFW_KEY_KP_7]) {
-		createSearchGraph();
-	}
-	if (keyStatus[GLFW_KEY_KP_9]) {
-		moveAlongPath();
-	}
-	
 }
 
 void onMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {

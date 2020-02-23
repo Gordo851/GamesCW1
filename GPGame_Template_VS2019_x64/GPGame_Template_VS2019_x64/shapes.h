@@ -54,7 +54,7 @@ public:
 	glm::vec3 possition = glm::vec3(0.0f);
 	glm::vec3 rotation = glm::vec3(0.0f);
 	glm::vec3 scale = glm::vec3(1.0f);
-
+	bool toRender = true;
 
 
 	CollisionType collision_type = sphere;//defult collision sphere
@@ -112,7 +112,7 @@ public:
 
 class Particle : public Shapes {
 public:
-	int DeathCount = 50000000;
+	int DeathCount = 100;
 	Particle();
 	~Particle();
 private:
