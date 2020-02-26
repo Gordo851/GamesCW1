@@ -11,7 +11,7 @@ using namespace std;
 
 
 
-enum CollisionType
+enum CollisionType // collision types 
 {
 	sphere,
 	AAcube,
@@ -61,7 +61,7 @@ public:
 	glm::vec3 min = glm::vec3(0.0f);
 	glm::vec3 max = glm::vec3(0.0f);
 	float radius = 0.5f;
-	float e = 0.6f;
+	float e = 0.6f; //youngs modulus
 	glm::vec3 correction = glm::vec3(0.0f);
 	
 
@@ -123,10 +123,10 @@ public:
 	//glm::vec3 position;
 	Boid();
 	~Boid();
-	float speed = 1.0f; // 1 - 4
-	float range = 5.0f;
-	float minDist = 1.5f;
-	glm::vec3 colour = glm::vec3(0.5f);
+	float speed = 1.0f; // 1 - 4 works well
+	float range = 5.0f; // sight range
+	float minDist = 1.5f; // seperation distance
+	glm::vec3 colour = glm::vec3(0.5f); // used to calcualte average colour
 
 private:
 };

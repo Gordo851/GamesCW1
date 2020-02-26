@@ -1,7 +1,6 @@
 #include "boidFlock.h"
 
 
-//https://github.com/CodingTrain/website/tree/master/CodingChallenges/CC_124_Flocking_Boids/Processing/CC124_Flocking_Boids
 boidFlock::boidFlock() {
 
 }
@@ -15,6 +14,9 @@ void boidFlock::removeBoid(Boid b) {
 	//does nothing
 }
 
+/**
+update three lists that hold all boid positions, velocity, and colour
+*/
 void boidFlock::updatePositions() {
 
 
@@ -32,17 +34,20 @@ void boidFlock::updatePositions() {
 	}
 }
 
+/**
+steer boid at index i
+*/
 void boidFlock::steer(int i) {
 	Boid& boidI = *boidList[i];
 
 	float range = boidI.range * boidI.range; // square
 	float minDiss = boidI.minDist * boidI.minDist; // square
 
-	float maxSpeed = boidI.speed;
-
-	float alignValue = 0.5;
-	float cohesionValue = 1;
-	float seperationValue = 2.0;
+	float maxSpeed = boidI.speed; 
+	//weights for boids three streering 
+	float alignValue = 0.5; //move in same direction as other boids
+	float cohesionValue = 1; // move to center of boid flock
+	float seperationValue = 2.0; // dont move to close to center of boid flock
 
 	glm::vec3 alignSteering = glm::vec3(0.0f);
 	glm::vec3 cohesionSteering = glm::vec3(0.0f);
@@ -50,24 +55,24 @@ void boidFlock::steer(int i) {
 	glm::vec3 averageColour = boidI.colour;
 
 
-	int indexcounter = i;
+	int indexcounter = i;//used to set colour of flock
 
-	int count = 0;
-	int countSep = 0;
+	int count = 0;//count number of boids in range
+	int countSep = 0; // ount nmber of boids too close
 	for (int j = 0; j < boidList.size(); j++) {
 		if (i != j) {
 			float diss = getDistance(i, j);//returns square diss
-			if (diss < range) {
-				if (diss < minDiss) {
+			if (diss < range) {//if boid is within range - i.e. boid can be "seen" by this boid
+				if (diss < minDiss) { // if boid is too close
 					countSep++;
 					glm::vec3 diff = boidPosition[i] - boidPosition[j];
 					diff /= diss;
 					SepSteering += diff;
 				}
-				alignSteering += boidVelocity[j];
-				cohesionSteering += boidPosition[j];
-				averageColour += boidColour[j];
-				indexcounter += j;
+				alignSteering += boidVelocity[j]; // add t osum of velocitys to take average
+				cohesionSteering += boidPosition[j]; //get average position of boids that can be seen
+				averageColour += boidColour[j]; // get average colour of boids that can be seen
+				indexcounter += j; // get sum of index - used to calcualte the target colour of the flock
 				count++;
 			}
 		}
@@ -158,7 +163,7 @@ void boidFlock::steer(int i) {
 		v = glm::normalize(v);
 	}
 
-	///calc angle
+	///calc angle to rotate boid
 	float angle = std::atan2(v.y,v.x);
 	boidI.rotation.z = angle;
 	double angleZ = -std::asin(v.z);
@@ -166,7 +171,7 @@ void boidFlock::steer(int i) {
 
 	boidI.velocity = v * maxSpeed ; // set speed
 }
-
+//get square distance
 float boidFlock::getDistance(int i, int j) {
 	return (boidPosition[i].x - boidPosition[j].x) * (boidPosition[i].x - boidPosition[j].x) + (boidPosition[i].y - boidPosition[j].y) * (boidPosition[i].y - boidPosition[j].y) + (boidPosition[i].z - boidPosition[j].z) * (boidPosition[i].z - boidPosition[j].z);
 }

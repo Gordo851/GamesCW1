@@ -30,9 +30,9 @@ using namespace std;
 #include "Windows.h"
 
 bool aStarSearch = false;
-bool boidAreAGo = true;
-bool explosions = false;
-bool fountains = false;
+bool boidAreAGo = false;
+bool explosions = true;
+bool fountains = true;
 
 // MAIN FUNCTIONS
 void startup();
@@ -544,7 +544,7 @@ void moveAlongPath()
 }
 
 ///////////////////////////////////////////////physics
-
+//apply force to object shape
 void ApplyForce(Shapes& shape, glm::vec3 force)
 {
 	if (shape.mass != 0) {
@@ -554,10 +554,10 @@ void ApplyForce(Shapes& shape, glm::vec3 force)
 	
 }
 
-
+// calcualte the rebound of two objects
 void calculateRebound(Shapes& a, Shapes& b, glm::vec3 normal) {
 
-	float e = min(a.e, b.e);
+	float e = min(a.e, b.e);//get min e
 
 	if (b.mass == 0) {//shape 2 static
 		glm::vec3 phat = (e + 1.0f) * a.mass * (a.velocity * normal) * normal;
@@ -577,51 +577,18 @@ void calculateRebound(Shapes& a, Shapes& b, glm::vec3 normal) {
 		//shape1.velocity = shape1.velocity + 2.0f * ((-shape1.velocity) * normal);
 	}
 
-	/*
 
-	glm::vec3 relVelocity = b.velocity - a.velocity;
-
-	float relVelocityAlongNormal = glm::dot(relVelocity, normal);
-	cout << "here\n";
-	//  if velocities are separating do nothing
-	if (relVelocityAlongNormal > 0) {
-		return;
-	}
-
-	// Calculate impulse scalar and e
-	float e = std::min(a.e, b.e);
-	float j = -(1 + e) * relVelocityAlongNormal;
-
-	j = j /( a.invMass + b.invMass);
-	// Apply impulse
-
-	glm::vec3 impulse = j * normal;
-
-	if (a.mass == 0) {
-		b.velocity +=  impulse / b.mass;
-	}
-	else if (b.mass == 0) {
-		a.velocity -= impulse / a.mass;
-	}
-	else {
-		float mass_sum = a.mass + b.mass;
-		float ratio = a.mass / mass_sum;
-		a.velocity -= ratio * impulse / a.mass;
-		ratio = b.mass / mass_sum;
-		b.velocity += ratio * impulse / b.mass;
-
-	}
-	*/
 }
-
+/**correct for floating point error 
+*/
 void PositionalCorrection(Shapes& a, Shapes& b, float penetration, glm::vec3 normal)
 {
 
 
-	float percent = 0.8f; // usually 20% to 80%
-	float slop = 0.01f; // usually 0.01 to 0.1
+	float percent = 0.8f; // precent correction
+	float slop = 0.01f; // alowable overlap
 
-	glm::vec3 correction = (max((penetration - slop), 0.0f) / (a.invMass + b.invMass)) * percent * normal;
+	glm::vec3 correction = (max((penetration - slop), 0.0f) / (a.invMass + b.invMass)) * percent * normal; // move object along normal 
 
 	a.correction -= a.invMass * correction;
 	b.correction += b.invMass * correction;
@@ -669,7 +636,9 @@ void calculateMinMax(Shapes& shape) {
 }
 
 
-
+/**
+check if two shapes are colliding and sets the normal if they are
+*/
 bool isColliding(Shapes& shape1, Shapes& shape2) {
 
 	if (shape1.mass == 0 && shape2.mass == 0) {
@@ -720,7 +689,7 @@ bool isColliding(Shapes& shape1, Shapes& shape2) {
 		}
 		return false;
 	}
-	else if ((shape1.collision_type == AAcube && shape2.collision_type == sphere)) {//////////////////temp code
+	else if ((shape1.collision_type == AAcube && shape2.collision_type == sphere)) {
 
 		return getAAcubeSphereNormal2(shape1, shape2);
 	}
@@ -730,7 +699,9 @@ bool isColliding(Shapes& shape1, Shapes& shape2) {
 
 }
 
-
+/**
+check if cube and sphere are colliding and then calcualte the normal when a cube and sphere have colided
+*/
 bool getAAcubeSphereNormal2(Shapes& cube, Shapes& sphere) {//shape 1 sphere
 
 
@@ -804,7 +775,9 @@ bool getAAcubeSphereNormal2(Shapes& cube, Shapes& sphere) {//shape 1 sphere
 	}
 	return false;
 }
-
+/**
+check if cube and sphere are colliding and then calcualte the normal when a cube and sphere have colided
+*/
 bool getAAcubeSphereNormal(Shapes& sphere, Shapes& cube) {//shape 1 sphere
 
 	glm::vec3 spherePos = getposition(sphere);
@@ -874,10 +847,12 @@ bool getAAcubeSphereNormal(Shapes& sphere, Shapes& cube) {//shape 1 sphere
 	}
 	return false;
 }
-
+/**
+calcualte the normal when two cubes have colided
+*/
 void getAACubeNormal(Shapes& a, Shapes& b) {
 
-	//https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331
+	
 	glm::vec3 xyzDiss = getXYZdistance(b, a);
 	glm::vec3 overlap = glm::vec3(0.0f);
 
@@ -933,21 +908,29 @@ void getAACubeNormal(Shapes& a, Shapes& b) {
 
 
 }
-
+/**
+returns a vector holding the x y and z distances between two points
+*/
 glm::vec3 getXYZdistance(glm::vec3 point1, glm::vec3 point2) {
 	return point1 - point2;
 }
-
+/**
+returns a vector holding the x y and z distances between two objects
+*/
 glm::vec3 getXYZdistance(Shapes a, Shapes b) {
 	glm::vec3 point1 = getposition(a);
 	glm::vec3 point2 = getposition(b);
 	return point1 - point2;
 }
-
+/**
+returns the position of a shape
+*/
 glm::vec3 getposition(Shapes shape) {
 	return glm::vec3(shape.w_matrix[3][0], shape.w_matrix[3][1], shape.w_matrix[3][2]);
 }
-
+/**
+returns the square distance between two shapes
+*/
 float getSquareDistance(Shapes a, Shapes b) {
 	glm::vec3 positionA = getposition(a);
 	glm::vec3 positionB = getposition(b);
@@ -955,18 +938,22 @@ float getSquareDistance(Shapes a, Shapes b) {
 
 	return distanceXYZ.x * distanceXYZ.x + distanceXYZ.z * distanceXYZ.z + distanceXYZ.y * distanceXYZ.y;
 }
-
+/**
+returns the square distance between two points
+*/
 float getSquareDistance(glm::vec3 point1, glm::vec3 point2) {
 	glm::vec3 distanceXYZ = getXYZdistance( point1,  point2);
 
 	return distanceXYZ.x * distanceXYZ.x + distanceXYZ.z * distanceXYZ.z + distanceXYZ.y * distanceXYZ.y;
 }
 
-
+/**
+loop thorugh all object pairs - 
+*/
 void checkCollisions()
 {
 
-	int count = 0;
+	
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		Shapes& shape1 = *allShapes[i];
@@ -974,21 +961,21 @@ void checkCollisions()
 
 		}
 		else {
-			count++;
-			calculateMinMax(shape1);
+			
+			calculateMinMax(shape1); //update vertex positions of all shapes - if they have moved. - done here so only calculated once per frame
 		}
 		//shape1.fillColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 	}
 
-	//Itteration for allShapes
+	//Itteration for allShapes - 
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		for (int j = i + 1; j < allShapes.size(); j++)
 		{
 			Shapes& shape1 = *allShapes[i];
 			Shapes& shape2 = *allShapes[j];
-			bool colliding = isColliding(shape1, shape2);
-			if (colliding == true) {
+			bool colliding = isColliding(shape1, shape2); // are two object colliding
+			if (colliding == true) { // if yes calcualte rebound
 				//shape1.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				//shape2.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				Collision& coll = *allCollisions[allCollisions.size() - 1];
@@ -1000,7 +987,10 @@ void checkCollisions()
 	}
 }
 
-
+/**
+apply a downward force on all objects if mass is not 0 
+can disable gravity  for specific object by setting hasgravity = false
+*/
 void applyGravity() {
 
 	for (int i = 0; i < allShapes.size(); i++)//apply gravity
@@ -1031,7 +1021,7 @@ void ResetParticles() {
 	for (int x = 0; x < size(particleArray); x += 1) {
 		particleArray[x].possition = (glm::vec3(0.1f * x, 1.0f, 1.0f));
 		particleArray[x].toRender = true;
-		particleArray[x].DeathCount = 100;
+		particleArray[x].DeathCount = 300;
 	}
 }
 void DestoryParticles(Particle& shape1) {
@@ -1097,7 +1087,9 @@ void CountParticlesToDeath() {
 
 //////////boid stuff goes here//////////////
 
-
+/**
+*set up boids - load in boisa matrix and add to allshapes
+*/
 void setupBoids() {
 
 
@@ -1142,7 +1134,9 @@ void setupBoids() {
 
 
 }
-
+/** 
+called once avery frame - updates boids position
+*/
 void boidUpdate() {
 
 	flock.target = getposition(myCube);
@@ -1250,16 +1244,16 @@ void startup() {
 
 
 	//
-	/*
+	
 	mySphere.Load();
-	mySphere.collision_type = AAcube;
+	mySphere.collision_type = sphere;
 	mySphere.w_matrix = glm::translate(glm::vec3(-2.0f, 1.0f, -3.0f)) *
 		glm::rotate(-t, glm::vec3(0.0f, 1.0f, 0.0f)) *
 		glm::rotate(-t, glm::vec3(1.0f, 0.0f, 0.0f)) *
 		glm::mat4(1.0f);
 	allShapes.push_back(&mySphere);
 	mySphere.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-
+	/*
 	myCylinder.Load();
 	myCylinder.mass = 1.0f;
 	myCylinder.collision_type = AAcube;
@@ -1279,7 +1273,7 @@ void startup() {
 			cubeArray[x][z].mass = 1.0f;
 			cubeArray[x][z].invMass = 1.0f;
 			cubeArray[x][z].w_matrix =
-				glm::translate(glm::vec3((-9 + z * 2 ), 3 + x * 2 , 5)) *
+				glm::translate(glm::vec3((-1 - z * 2 ), 3 + x * 2 , 0)) *
 				glm::mat4(1.0f);
 			cubeArray[x][z].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 			allShapes.push_back(&cubeArray[x][z]);

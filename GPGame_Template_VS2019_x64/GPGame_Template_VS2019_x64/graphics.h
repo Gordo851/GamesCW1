@@ -27,8 +27,8 @@ public:
 
 
 	GLFWwindow*		window;
-	int				windowWidth = 640;
-	int				windowHeight = 480;
+	int				windowWidth = 1280;
+	int				windowHeight = 960;
 	float           aspect;
 	glm::mat4		viewMatrix = glm::mat4(1.0f); // View Matrix
 	glm::mat4		proj_matrix = glm::mat4(1.0f);
