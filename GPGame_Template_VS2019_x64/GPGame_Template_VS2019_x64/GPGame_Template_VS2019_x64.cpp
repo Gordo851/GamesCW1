@@ -29,6 +29,7 @@ using namespace std;
 #include "boidFlock.h"
 #include "Windows.h"
 
+//bools to run specific parts of the assignment
 bool aStarSearch = true;
 bool boidAreAGo = false;
 bool explosions = false;
@@ -166,8 +167,10 @@ int main()
 	return 0;
 }
 ////////////////////////////////////////////A* Search
+//Calculate the euclidean distance fo heuristic. Using methods used in collision detection
 float CalculateHeuristic(float X, float Y)
 {
+	//create imaginary plae ie. where the player WOULD be if they moved here
 	Shapes imaginaryPlace;
 	imaginaryPlace.w_matrix =
 		glm::translate(glm::vec3(X, 0.5f, Y)) *
@@ -175,6 +178,7 @@ float CalculateHeuristic(float X, float Y)
 	float heuristic = sqrt(getSquareDistance(imaginaryPlace, myTarget));//square root for now
 	return heuristic;
 }
+//The map is drawn from an array of 20x20. If the array contains a 1 then a cube is laced at that x y position. The cubes forshowing the search graphically are placed lower than the maz. 
 void DrawMapOnScreen()
 {
 
@@ -220,6 +224,7 @@ void DrawMapOnScreen()
 	}
 	
 }
+//Map is randomly generated. Current values mean 40% of the map will be blocked off
 void CreateMap()
 {
 	//randomly place obstacles
@@ -260,6 +265,7 @@ void CreateMap()
 		}
 	}
 }
+//Hard code to move player to path x,y coordinates
 void movePlayer(float x, float y)
 {
 	playerX = x;
@@ -267,6 +273,7 @@ void movePlayer(float x, float y)
 	myPlayer.possition = glm::vec3(playerX, 0.5f, playerY);
 	myPlayer.velocity = (glm::vec3(0.0f, 0.0f, 0.0f));
 }
+// Create the nodes to be used in searching. Picks each node and finds if paths exist aroun that node to enable travel horizontally or vertically 
 void createSearchGraph()
 {
 	int index = 0;
@@ -306,6 +313,7 @@ void createSearchGraph()
 	}
 	searchGraph();
 }
+//Method to enable searchin. Posible next nodes can be found by their index which is their x,y coordinates
 Node findNodesByIndex(glm::vec2 index)
 {
 	for (int k = 0; k < allNodes.size(); k++)
@@ -317,6 +325,7 @@ Node findNodesByIndex(glm::vec2 index)
 		}
 	}
 }
+//This method changes the colours of the searching array to visually show the search process.
 void showSearch()
 {
 	for (int i = 0; i < availableIndexes.size(); i++)
@@ -338,6 +347,7 @@ void showSearch()
 	Sleep(100);
 
 }
+//This method changes the colours of the searching array to visually show the search process.
 void showChosenNode(Node nodeChosen)
 {
 	glm::vec2 position = nodeChosen.index;
@@ -346,8 +356,11 @@ void showChosenNode(Node nodeChosen)
 	showSearchCubeArray[x][y].fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	
 }
+//Search through the graph created above to make the optimal path.
 void searchGraph()
 {
+	//Setup current and target nodes
+	//Basic variables needed for searching - values don't matter as they are immediately changed
 	Node currentNode = findNodesByIndex(glm::vec2(1, 1));
 	Node targetNode = findNodesByIndex(glm::vec2(17, 11));
 	vector<glm::vec2> usedIndexes;
@@ -357,8 +370,10 @@ void searchGraph()
 	float indexToBeDeleted;
 	glm::vec2 indexToAddToUsed;
 	int x = 0;
+	//While the search is not complete
 	while (currentNode.index != targetNode.index)
 	{
+		//We check for the current node the directions of posible travel and add those nodes to an 'available' index and register the current node as their parent.
 		if (currentNode.travelUp == true)
 		{
 			bool add = true;
@@ -463,8 +478,11 @@ void searchGraph()
 			}
 		}
 
+		//Reset the total cost from the last itteration else the program hangs on the lowest node and wont move to the next node if it's cost is higher
 		totalCost = 1000.0f;
+		//show the search visually
 		showSearch();
+		//Search through all available nodes, calculate their heuristic and path cost (based on the trail of their parents back to the origin) and set the current node to the best next possible one.
 		for (int i = 0; i < availableIndexes.size(); i++)
 		{
 			glm::vec2 indexHere = availableIndexes[i];
@@ -495,14 +513,14 @@ void searchGraph()
 
 		}
 
-
+		//Delete the selected node from available nodes
 		availableIndexes.erase(availableIndexes.begin() + indexToBeDeleted);
 		usedIndexes.push_back(indexToAddToUsed);
 		showChosenNode(currentNode);
 		x++;
 	
 	}
-	//creating path for agent
+	//Once the search is complete, go back through all of the parents to create the final path our agent will follow.
 	while (currentNode.index != glm::vec2(1, 1))
 	{
 		path.insert(path.begin(), currentNode.index);
@@ -518,6 +536,7 @@ void searchGraph()
 	path.insert(path.begin(), currentNode.index);
 	cout << "Search complete";
 }
+//Move the player along the entire path
 void moveAlongPath()
 {
 	for (int i = 0; i < path.size(); i++)
@@ -1002,6 +1021,7 @@ void applyGravity() {
 
 }
 /////////////particles stuff goes here//////////
+//Load particle objects and set their colour
 void CreateParticles() {
 	for (int x = 0; x < size(particleArray); x += 1) {
 		particleArray[x].Load();
@@ -1015,6 +1035,7 @@ void CreateParticles() {
 		allParticles.push_back(&particleArray[x]);
 	}
 }
+//Reset particles to base positions
 void ResetParticles() {
 	for (int x = 0; x < size(particleArray); x += 1) {
 		particleArray[x].possition = (glm::vec3(0.1f * x, -1.0f, 1.0f));
@@ -1024,9 +1045,11 @@ void ResetParticles() {
 	}
 	letsExplode = false;
 }
+//This doesn't 'destroy' merely stops them being rendered so they vanish
 void DestoryParticles(Particle& shape1) {
 	shape1.toRender = false;
 }
+//Get particles in position to explode.
 void setUpRandomExplosion() {
 	ResetParticles();
 	for (int i = 0; i < allParticles.size(); i++)
@@ -1043,6 +1066,7 @@ void setUpRandomExplosion() {
 	}
 	letsExplode = true;
 }
+//Every thrid frame apply a random force to simulate an explosion.
 void moveParticlesRandomExplosion() {
 	for (int h = 0; h < allParticles.size(); h++)
 	{
@@ -1055,6 +1079,7 @@ void moveParticlesRandomExplosion() {
 		ApplyForce(shape1, force);
 	}
 }
+//fountain particles from an emitter. They will spurt up and out.
 void fountainParticles() {
 	float MAX = 1.0f;
 	Particle& shape1 = *allParticles[fountainNumber];
@@ -1071,6 +1096,7 @@ void fountainParticles() {
 		fountainNumber = 0;
 	}
 }
+//Count all particles down towards death.
 void CountParticlesToDeath() {
 	for (int i = 0; i < allParticles.size(); i++)
 	{
@@ -1180,6 +1206,8 @@ void startup() {
 	myGraphics.aspect = (float)myGraphics.windowWidth / (float)myGraphics.windowHeight;
 	myGraphics.proj_matrix = glm::perspective(glm::radians(50.0f), myGraphics.aspect, 0.1f, 1000.0f);
 	
+
+	//Only load the objects we need for the demo
 	if (explosions == true || fountains == true) {
 		CreateParticles();
 	}
@@ -1388,10 +1416,11 @@ void updateCamera() {
 void updateSceneElements() {
 
 	glfwPollEvents();                                // poll callbacks
-	CountParticlesToDeath();
+	CountParticlesToDeath();				//Ensure particles die on time
 	boidUpdate();
 	applyGravity();
 	checkCollisions(); // check collistion
+	//Every third frame produce a new droplet of water for the fountain
 	if (fountains == true) {
 		if (frameNumber % 3 == 0) {
 			fountainParticles();
@@ -1399,6 +1428,7 @@ void updateSceneElements() {
 		}
 		frameNumber += 1;
 	}
+	//Reset the particles after a predecided number of frames. Will make them visible again if they have previously been destoryed.
 	if (fountains == true || explosions == true) {
 		if (counter == lengthToReset) {
 			ResetParticles();
@@ -1406,6 +1436,7 @@ void updateSceneElements() {
 		}
 		counter += 1;
 	}
+	// particles are randomly xploded
 	if (letsExplode == true) {
 		moveParticlesRandomExplosion();
 	}
@@ -1505,6 +1536,7 @@ void renderScene() {
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		Shapes& shape1 = *allShapes[i];
+		// to render is used to hide particles that have been counted to death. 
 		if (shape1.toRender == true) {
 			shape1.Draw();
 		}
@@ -1583,19 +1615,7 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 	
 	if (aStarSearch == true) {
-		//Keys to move player, start search and then have player move along the returned path
-		if (keyStatus[GLFW_KEY_KP_8]) {
-			movePlayer(0, 1);
-		}
-		if (keyStatus[GLFW_KEY_KP_4]) {
-			movePlayer(1, 0);
-		}
-		if (keyStatus[GLFW_KEY_KP_6]) {
-			movePlayer(-1, 0);
-		}
-		if (keyStatus[GLFW_KEY_KP_5]) {
-			movePlayer(0, -1);
-		}
+		//keys to begin search and move player.
 		if (keyStatus[GLFW_KEY_KP_7]) {
 			createSearchGraph();
 		}

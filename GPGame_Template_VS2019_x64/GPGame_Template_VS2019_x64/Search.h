@@ -9,6 +9,7 @@ using namespace std;
 
 class Node {
 public:
+	//base class for all nodes. Start off at origin with no paths. 
 	Node();
 	~Node();
 	glm::vec2 index = glm::vec2(0, 0);

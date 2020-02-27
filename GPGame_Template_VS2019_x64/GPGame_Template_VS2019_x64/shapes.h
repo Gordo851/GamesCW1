@@ -112,6 +112,7 @@ public:
 
 class Particle : public Shapes {
 public:
+	//how mnay frames a particle will last
 	int DeathCount = 100;
 	Particle();
 	~Particle();
