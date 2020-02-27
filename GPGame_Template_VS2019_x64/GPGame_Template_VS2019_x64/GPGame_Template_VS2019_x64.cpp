@@ -1,3 +1,5 @@
+
+
 // Simplified Renderer application for GP course
 // Features:
 // Reduced OpenGL version from 4.5 to 3.3 to allow it to render in older laptops.
@@ -30,8 +32,8 @@ using namespace std;
 #include "Windows.h"
 
 //bools to run specific parts of the assignment
-bool aStarSearch = true;
-bool boidAreAGo = false;
+bool aStarSearch = false;
+bool boidAreAGo = true;
 bool explosions = false;
 bool fountains = false;
 
@@ -102,12 +104,12 @@ vector<Shapes*> allShapes;
 vector<Collision*> allCollisions;
 
 Cube  cubeArray[10][10];
-
+Cube  cubeArray2[10][10];
 boidFlock flock;
-Boid boidArray[50];
+Boid boidArray[200];
 
 boidFlock flock2;
-Boid boidArray2[50];
+Boid boidArray2[1];
 
 
 vector<Particle*> allParticles;
@@ -190,7 +192,7 @@ void DrawMapOnScreen()
 				mapCubeArray[x][z].collision_type = AAcube;
 				mapCubeArray[x][z].mass = 0.0f;
 				mapCubeArray[x][z].invMass = 0.0f;
-				
+
 				mapCubeArray[x][z].w_matrix =
 					glm::translate(glm::vec3(x, 0.5, z)) *
 					glm::mat4(1.0f);
@@ -203,7 +205,7 @@ void DrawMapOnScreen()
 			}
 		}
 	}
-	
+
 	for (int x = 0; x < 20; x += 1) {
 		for (int z = 0; z < 20; z += 1) {
 			{
@@ -222,14 +224,14 @@ void DrawMapOnScreen()
 			}
 		}
 	}
-	
+
 }
 //Map is randomly generated. Current values mean 40% of the map will be blocked off
 void CreateMap()
 {
 	//randomly place obstacles
 	float MAX = 1.0f;
-	for (int x = 0; x < 20; x ++)
+	for (int x = 0; x < 20; x++)
 	{
 		for (int y = 0; y < 20; y++)
 		{
@@ -279,12 +281,12 @@ void createSearchGraph()
 	int index = 0;
 	for (int x = 0; x < 20; x++)
 	{
-		for (int y = 0; y < 20; y ++)
+		for (int y = 0; y < 20; y++)
 		{
 			//create node at x,y if that area is empty (and therefore passable by agent)
 			if (mapArray[x][y] == 0)
 			{
-				node[index].index = glm::vec2(x,y);
+				node[index].index = glm::vec2(x, y);
 				node[index].HeuristicCost = CalculateHeuristic(x, y);
 				allNodes.push_back(&node[index]);
 				//search all nodes within a radius of one of our node. If they are empty create a path between this node and that node. 
@@ -354,7 +356,7 @@ void showChosenNode(Node nodeChosen)
 	int x = position[0];
 	int y = position[1];
 	showSearchCubeArray[x][y].fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	
+
 }
 //Search through the graph created above to make the optimal path.
 void searchGraph()
@@ -364,7 +366,7 @@ void searchGraph()
 	Node currentNode = findNodesByIndex(glm::vec2(1, 1));
 	Node targetNode = findNodesByIndex(glm::vec2(17, 11));
 	vector<glm::vec2> usedIndexes;
-	usedIndexes.push_back(glm::vec2(1,1));
+	usedIndexes.push_back(glm::vec2(1, 1));
 	float totalCost = 10000.0f;
 	float pathCost = 0.0f;
 	float indexToBeDeleted;
@@ -518,7 +520,7 @@ void searchGraph()
 		usedIndexes.push_back(indexToAddToUsed);
 		showChosenNode(currentNode);
 		x++;
-	
+
 	}
 	//Once the search is complete, go back through all of the parents to create the final path our agent will follow.
 	while (currentNode.index != glm::vec2(1, 1))
@@ -568,7 +570,7 @@ void ApplyForce(Shapes& shape, glm::vec3 force)
 		glm::vec3 Velocity = force / shape.mass;
 		shape.velocity = shape.velocity + Velocity;
 	}
-	
+
 }
 
 // calcualte the rebound of two objects
@@ -596,7 +598,7 @@ void calculateRebound(Shapes& a, Shapes& b, glm::vec3 normal) {
 
 
 }
-/**correct for floating point error 
+/**correct for floating point error
 */
 void PositionalCorrection(Shapes& a, Shapes& b, float penetration, glm::vec3 normal)
 {
@@ -869,7 +871,7 @@ calcualte the normal when two cubes have colided
 */
 void getAACubeNormal(Shapes& a, Shapes& b) {
 
-	
+
 	glm::vec3 xyzDiss = getXYZdistance(b, a);
 	glm::vec3 overlap = glm::vec3(0.0f);
 
@@ -959,18 +961,18 @@ float getSquareDistance(Shapes a, Shapes b) {
 returns the square distance between two points
 */
 float getSquareDistance(glm::vec3 point1, glm::vec3 point2) {
-	glm::vec3 distanceXYZ = getXYZdistance( point1,  point2);
+	glm::vec3 distanceXYZ = getXYZdistance(point1, point2);
 
 	return distanceXYZ.x * distanceXYZ.x + distanceXYZ.z * distanceXYZ.z + distanceXYZ.y * distanceXYZ.y;
 }
 
 /**
-loop thorugh all object pairs - 
+loop thorugh all object pairs -
 */
 void checkCollisions()
 {
 
-	
+
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		Shapes& shape1 = *allShapes[i];
@@ -978,7 +980,7 @@ void checkCollisions()
 
 		}
 		else {
-			
+
 			calculateMinMax(shape1); //update vertex positions of all shapes - if they have moved. - done here so only calculated once per frame
 		}
 		//shape1.fillColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -1005,7 +1007,7 @@ void checkCollisions()
 }
 
 /**
-apply a downward force on all objects if mass is not 0 
+apply a downward force on all objects if mass is not 0
 can disable gravity  for specific object by setting hasgravity = false
 */
 void applyGravity() {
@@ -1027,7 +1029,7 @@ void CreateParticles() {
 		particleArray[x].Load();
 		particleArray[x].collision_type = sphere;
 		particleArray[x].w_matrix =
-			glm::translate(glm::vec3(1+x, -1.0f, 0.0f)) *
+			glm::translate(glm::vec3(1 + x, -1.0f, 0.0f)) *
 			glm::mat4(1.0f);
 		particleArray[x].mass = 0.1f;
 		particleArray[x].fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -1160,7 +1162,7 @@ void setupBoids() {
 
 
 }
-/** 
+/**
 called once avery frame - updates boids position
 */
 void boidUpdate() {
@@ -1205,7 +1207,7 @@ void startup() {
 	// Calculate proj_matrix for the first time.
 	myGraphics.aspect = (float)myGraphics.windowWidth / (float)myGraphics.windowHeight;
 	myGraphics.proj_matrix = glm::perspective(glm::radians(50.0f), myGraphics.aspect, 0.1f, 1000.0f);
-	
+
 
 	//Only load the objects we need for the demo
 	if (explosions == true || fountains == true) {
@@ -1215,6 +1217,37 @@ void startup() {
 	if (boidAreAGo == true) {
 		//load up boids
 		setupBoids();
+		for (int x = 0; x < 5; x += 1) {
+			for (int z = 0; z < 5; z += 1) {
+
+				cubeArray2[x][z].Load();
+				cubeArray2[x][z].collision_type = AAcube;
+				//cubeArray[x][z].radius = 0.5f;
+				cubeArray2[x][z].mass = 0.0f;
+				cubeArray2[x][z].invMass = 0.0f;
+				cubeArray2[x][z].w_matrix =
+					glm::translate(glm::vec3((2 + z * 2), 0.5 + x * 2, 11 - z * 2)) *
+					glm::mat4(1.0f);
+				cubeArray2[x][z].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+				allShapes.push_back(&cubeArray2[x][z]);
+			}
+		}
+
+		for (int x = 5; x < 10; x += 1) {
+			for (int z = 5; z < 10; z += 1) {
+
+				cubeArray2[x][z].Load();
+				cubeArray2[x][z].collision_type = AAcube;
+				//cubeArray[x][z].radius = 0.5f;
+				cubeArray2[x][z].mass = 0.0f;
+				cubeArray2[x][z].invMass = 0.0f;
+				cubeArray2[x][z].w_matrix =
+					glm::translate(glm::vec3((-20 + z * 2), -7 + x * 2, 11 - z * 2)) *
+					glm::mat4(1.0f);
+				cubeArray2[x][z].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+				allShapes.push_back(&cubeArray2[x][z]);
+			}
+		}
 	}
 
 	if (aStarSearch == true) {
@@ -1267,12 +1300,12 @@ void startup() {
 	myCube.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	allShapes.push_back(&myCube);
 
-	
+
 
 
 
 	//
-	
+
 	mySphere.Load();
 	mySphere.collision_type = sphere;
 	mySphere.w_matrix = glm::translate(glm::vec3(-2.0f, 1.0f, -3.0f)) *
@@ -1291,7 +1324,7 @@ void startup() {
 	myCylinder.fillColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
 	myCylinder.lineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	*/
-	
+
 	for (int x = 0; x < 3; x += 1) {
 		for (int z = 0; z < 2; z += 1) {
 
@@ -1301,14 +1334,14 @@ void startup() {
 			cubeArray[x][z].mass = 1.0f;
 			cubeArray[x][z].invMass = 1.0f;
 			cubeArray[x][z].w_matrix =
-				glm::translate(glm::vec3((-1 - z * 2 ), 3 + x * 2 , 0)) *
+				glm::translate(glm::vec3((-1 - z * 2), 3 + x * 2, 0)) *
 				glm::mat4(1.0f);
 			cubeArray[x][z].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 			allShapes.push_back(&cubeArray[x][z]);
 		}
 	}
 
-	
+
 	arrowX.Load(); arrowY.Load(); arrowZ.Load();
 	arrowX.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); arrowX.lineColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	arrowY.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); arrowY.lineColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
@@ -1470,7 +1503,7 @@ void updateSceneElements() {
 
 	}
 
-	
+
 	for (int i = 0; i < allShapes.size(); i++)
 	{
 		Shapes& shape1 = *allShapes[i];
@@ -1479,7 +1512,7 @@ void updateSceneElements() {
 	}
 
 
-	
+
 
 	//Calculate Arrows translations (note: arrow model points up)
 	glm::mat4 mv_matrix_x =
@@ -1592,7 +1625,7 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 		ApplyForce(myCube, force);
 
 	}
-	
+
 	if (boidAreAGo == true) {
 		if (keyStatus[GLFW_KEY_B] == true) {
 			flock.useTarget = false;
@@ -1613,7 +1646,7 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 	// If exit key pressed.
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
-	
+
 	if (aStarSearch == true) {
 		//keys to begin search and move player.
 		if (keyStatus[GLFW_KEY_KP_7]) {
@@ -1655,3 +1688,4 @@ void onMouseMoveCallback(GLFWwindow* window, double x, double y) {
 void onMouseWheelCallback(GLFWwindow* window, double xoffset, double yoffset) {
 	int yoffsetInt = static_cast<int>(yoffset);
 }
+
