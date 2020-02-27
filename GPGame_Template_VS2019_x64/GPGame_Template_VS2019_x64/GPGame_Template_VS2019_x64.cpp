@@ -29,10 +29,10 @@ using namespace std;
 #include "boidFlock.h"
 #include "Windows.h"
 
-bool aStarSearch = false;
+bool aStarSearch = true;
 bool boidAreAGo = false;
-bool explosions = true;
-bool fountains = true;
+bool explosions = false;
+bool fountains = false;
 
 // MAIN FUNCTIONS
 void startup();
@@ -266,7 +266,6 @@ void movePlayer(float x, float y)
 	playerY = y;
 	myPlayer.possition = glm::vec3(playerX, 0.5f, playerY);
 	myPlayer.velocity = (glm::vec3(0.0f, 0.0f, 0.0f));
-	cout << playerX << " " << playerY << "\n";
 }
 void createSearchGraph()
 {
@@ -484,7 +483,6 @@ void searchGraph()
 				}
 			}
 			pathCost = path.size();
-			cout << pathCost << "\n";
 			path.clear();
 			float costOfPossible = possibleNext.HeuristicCost + pathCost;
 			if (costOfPossible < totalCost)
@@ -1019,10 +1017,12 @@ void CreateParticles() {
 }
 void ResetParticles() {
 	for (int x = 0; x < size(particleArray); x += 1) {
-		particleArray[x].possition = (glm::vec3(0.1f * x, 1.0f, 1.0f));
+		particleArray[x].possition = (glm::vec3(0.1f * x, -1.0f, 1.0f));
+		particleArray[x].velocity = glm::vec3(0.0f);
 		particleArray[x].toRender = true;
 		particleArray[x].DeathCount = 300;
 	}
+	letsExplode = false;
 }
 void DestoryParticles(Particle& shape1) {
 	shape1.toRender = false;
