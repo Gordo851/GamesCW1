@@ -33,7 +33,7 @@ using namespace std;
 
 //bools to run specific parts of the assignment
 bool aStarSearch = false;
-bool boidAreAGo = true;
+bool boidAreAGo = false;
 bool explosions = false;
 bool fountains = false;
 
@@ -1185,6 +1185,63 @@ void boidUpdate() {
 
 }
 
+void takeShot(glm::vec3 shotVector)
+{
+	myCube.possition = glm::vec3(0);
+	myCube.velocity = glm::vec3(0);
+	cout << (shotVector[0]) << " " << (shotVector[1]) << " " << (shotVector[2]) << "\n";
+	ApplyForce(myCube, shotVector);
+}
+
+////////////// It's shooting time//////////////////
+glm::vec3 calculateShot(Shapes me, Shapes target)
+{
+	bool xNagative = false;
+	bool yNagative = false;
+	bool zNagative = false;
+	float distanceBetween = sqrt(getSquareDistance(me, target));//square root for now
+	glm::vec3 currentSpeedOfTarget = target.velocity;
+	float TimeToTarget = distanceBetween / 5;
+	Shapes WhereTargetWillBe;
+	WhereTargetWillBe.possition = target.possition + (target.velocity * TimeToTarget);
+	glm::vec3 shotPosition = sqrt(abs((abs(WhereTargetWillBe.possition * WhereTargetWillBe.possition)) + (abs(me.possition * me.possition))));
+	float diffX = shotPosition[0] - me.possition[0];
+	if (diffX < 0)
+	{
+		xNagative = true;
+	}
+	float diffY = shotPosition[1] - me.possition[1];
+	if (diffY < 0)
+	{
+		yNagative = true;
+	}
+	float diffZ = shotPosition[2] - me.possition[2];
+	if (diffZ < 0)
+	{
+		zNagative = true;
+	}
+	float xz = sqrt(abs((abs(diffX * diffX)) + (abs(diffZ * diffZ))));
+	float xzy = sqrt(abs((abs(xz * xz)) + (abs(diffY * diffY))));
+	float shrinkingCoefficent;
+	shrinkingCoefficent = xzy / 5;
+	glm::vec3 shotVector = shotPosition * shrinkingCoefficent;
+	if (xNagative == true)
+	{
+		shotVector[0] = shotVector[0] * -1;
+	}
+	if (yNagative == true)
+	{
+		shotVector[1] = shotVector[1] * -1;
+	}
+	if (zNagative == true)
+	{
+		shotVector[2] = shotVector[2] * -1;
+	}
+	takeShot(shotVector);
+	return shotVector;
+}
+
+
 
 
 ///////////////start uo/////////////////
@@ -1275,28 +1332,27 @@ void startup() {
 		allShapes.push_back(&myTarget);
 
 	}
+	
 	// Load Geometry examples
 	myCube2.Load();
 	myCube2.mass = 1.0f;
 	myCube2.invMass = 1.0f;
 	myCube2.w_matrix =
-		glm::translate(glm::vec3(-4.0f, 1.0f, 2.0f)) *
-		glm::scale(glm::vec3(1.5f, 1.5f, 1.5f)) *
+		glm::translate(glm::vec3(-4.0f, 0.5f, 4.0f)) *
 		glm::mat4(1.0f);
 	myCube2.collision_type = AAcube;
 	myCube2.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	allShapes.push_back(&myCube2);
-	myCube2.scale = glm::vec3(1.5, 1.5, 1.5);
-
+	glm::vec3 force = glm::vec3(1.0f, 0, 0);
+	ApplyForce(myCube2, force);
 
 	myCube.Load();
-	myCube.collision_type = AAcube;
-
-	myCube.w_matrix =
-		glm::translate(glm::vec3(-4.0f, 4.0f, 4.0f)) *
-		glm::mat4(1.0f);
 	myCube.mass = 1.0f;
 	myCube.invMass = 1.0f;
+	myCube.w_matrix =
+		glm::translate(glm::vec3(0.0f, 0.5f, 0.0f)) *
+		glm::mat4(1.0f);
+	myCube.collision_type = AAcube;
 	myCube.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	allShapes.push_back(&myCube);
 
@@ -1306,47 +1362,17 @@ void startup() {
 
 	//
 
-	mySphere.Load();
-	mySphere.collision_type = sphere;
-	mySphere.w_matrix = glm::translate(glm::vec3(-2.0f, 1.0f, -3.0f)) *
-		glm::rotate(-t, glm::vec3(0.0f, 1.0f, 0.0f)) *
-		glm::rotate(-t, glm::vec3(1.0f, 0.0f, 0.0f)) *
-		glm::mat4(1.0f);
-	allShapes.push_back(&mySphere);
-	mySphere.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-	/*
-	myCylinder.Load();
-	myCylinder.mass = 1.0f;
-	myCylinder.collision_type = AAcube;
-	myCylinder.w_matrix = glm::translate(glm::vec3(1.5f, 1.0f, 2.0f)) *
-		glm::mat4(1.0f);
-	allShapes.push_back(&myCylinder);
-	myCylinder.fillColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
-	myCylinder.lineColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	*/
+	
 
-	for (int x = 0; x < 3; x += 1) {
-		for (int z = 0; z < 2; z += 1) {
+	
 
-			cubeArray[x][z].Load();
-			cubeArray[x][z].collision_type = AAcube;
-			//cubeArray[x][z].radius = 0.5f;
-			cubeArray[x][z].mass = 1.0f;
-			cubeArray[x][z].invMass = 1.0f;
-			cubeArray[x][z].w_matrix =
-				glm::translate(glm::vec3((-1 - z * 2), 3 + x * 2, 0)) *
-				glm::mat4(1.0f);
-			cubeArray[x][z].fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-			allShapes.push_back(&cubeArray[x][z]);
-		}
-	}
 
 
 	arrowX.Load(); arrowY.Load(); arrowZ.Load();
 	arrowX.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); arrowX.lineColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	arrowY.fillColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); arrowY.lineColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 	arrowZ.fillColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); arrowZ.lineColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-
+	
 
 	myFloor.Load();
 	myFloor.w_matrix =
@@ -1361,12 +1387,12 @@ void startup() {
 	myFloor.fillColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand Colour
 	myFloor.lineColor = glm::vec4(130.0f / 255.0f, 96.0f / 255.0f, 61.0f / 255.0f, 1.0f);    // Sand again
 	allShapes.push_back(&myFloor);
-
+	
 	myLine.Load();
 	myLine.fillColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	myLine.lineColor = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
 	myLine.lineWidth = 5.0f;
-
+	
 	///calc starting min max 
 	for (int i = 0; i < allShapes.size(); i++)
 	{
@@ -1665,7 +1691,12 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 		if (keyStatus[GLFW_KEY_KP_2]) {
 			setUpRandomExplosion();
 		}
+
 	}
+	if (keyStatus[GLFW_KEY_T]) {
+		calculateShot(myCube, myCube2);
+	}
+
 }
 
 void onMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
