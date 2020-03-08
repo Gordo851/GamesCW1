@@ -1192,31 +1192,41 @@ void boidUpdate() {
 
 void takeShot(glm::vec3 shotVector)
 {
-	particleArray[10].velocity = glm::vec3(0);
-	particleArray[10].possition = myCube.possition + glm::vec3(1);
-	ApplyForce(particleArray[10], shotVector);
+	myCube.velocity = glm::vec3(0);
+	myCube.possition = glm::vec3(0,0.5f,0);
+	ApplyForce(myCube, shotVector);
 }
 
 ////////////// It's shooting time//////////////////
 glm::vec3 calculateShot(Shapes me, Shapes target)
 {
-	float speedOfShot = 10;
+	float speedOfShot = 15;
 	float distanceBetween = sqrt(getSquareDistance(me, target));
 	glm::vec3 currentSpeedOfTarget = target.velocity;
 	float TimeToTarget = distanceBetween / speedOfShot;
 	cout << TimeToTarget << "\n";
 	Shapes WhereTargetWillBe;
 	WhereTargetWillBe.possition = target.possition + (target.velocity * TimeToTarget);
-	cout << target.possition[0] << " " << target.possition[1] << " " << target.possition[2] << "\n ";
-	cout << WhereTargetWillBe.possition[0] << " " << WhereTargetWillBe.possition[1] << " " << WhereTargetWillBe.possition[2] << "\n ";
-	
-	glm::vec3 shotVector = sqrt(abs((abs(WhereTargetWillBe.possition * WhereTargetWillBe.possition)) + (abs(me.possition * me.possition))));
 
+	glm::vec3 shotVector = sqrt(abs((abs(WhereTargetWillBe.possition * WhereTargetWillBe.possition)) + (abs(me.possition * me.possition))));
 	float totalSizeOfVector = shotVector[0] + shotVector[1] + shotVector[2];
 	glm::vec3 shotShrunk;
 	shotShrunk[0] = shotVector[0] / totalSizeOfVector * speedOfShot;
 	shotShrunk[1] = shotVector[1] / totalSizeOfVector * speedOfShot;
 	shotShrunk[2] = shotVector[2] / totalSizeOfVector * speedOfShot;
+	if (WhereTargetWillBe.possition[0] < 0)
+	{
+		shotShrunk[0] = shotShrunk[0] * -1;
+	}
+	if (WhereTargetWillBe.possition[1] < 0)
+	{
+		shotShrunk[1] = shotShrunk[1] * -1;
+	}
+	if (WhereTargetWillBe.possition[2] < 0)
+	{
+		shotShrunk[2] = shotShrunk[2] * -1;
+	}
+
 	takeShot(shotShrunk);
 	return shotShrunk;
 }
@@ -1304,7 +1314,7 @@ void updateMissle()
 
 
 void startup() {
-	glm::vec3 force = glm::vec3(1.0f, 0, 0);
+	glm::vec3 force = glm::vec3(0, 0, -2);
 	// Keep track of the running time
 	GLfloat currentTime = (GLfloat)glfwGetTime();    // retrieve timelapse
 	deltaTime = currentTime;                        // start delta time
@@ -1395,7 +1405,7 @@ void startup() {
 	myCube2.mass = 1.0f;
 	myCube2.invMass = 1.0f;
 	myCube2.w_matrix =
-		glm::translate(glm::vec3(-4.0f, 0.5f, 10.0f)) *
+		glm::translate(glm::vec3(-6.0f, 0.5f, 10.0f)) *
 		glm::mat4(1.0f);
 	myCube2.collision_type = AAcube;
 	myCube2.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
