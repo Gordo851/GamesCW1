@@ -30,11 +30,12 @@ using namespace std;
 #include "Search.h"
 #include "boidFlock.h"
 #include "Windows.h"
+#include "Missle.h"
 
 //bools to run specific parts of the assignment
 bool aStarSearch = false;
 bool boidAreAGo = false;
-bool explosions = false;
+bool explosions = true;
 bool fountains = false;
 
 // MAIN FUNCTIONS
@@ -106,11 +107,10 @@ vector<Collision*> allCollisions;
 Cube  cubeArray[10][10];
 Cube  cubeArray2[10][10];
 boidFlock flock;
-Boid boidArray[200];
+Boid boidArray[1];
 
 boidFlock flock2;
 Boid boidArray2[1];
-
 
 vector<Particle*> allParticles;
 Cube myParticleCube;
@@ -133,6 +133,11 @@ Node node[400];
 vector<Node*> allNodes;
 vector<glm::vec2> path;
 vector<glm::vec2> availableIndexes;
+
+EnemyShip Ship[50];
+AllMissle missles;
+Missle missleArray[100];
+Particle BulletArray[100];
 
 int main()
 {
@@ -1187,72 +1192,124 @@ void boidUpdate() {
 
 void takeShot(glm::vec3 shotVector)
 {
-	myCube.possition = glm::vec3(0);
-	myCube.velocity = glm::vec3(0);
-	cout << (shotVector[0]) << " " << (shotVector[1]) << " " << (shotVector[2]) << "\n";
-	ApplyForce(myCube, shotVector);
+	particleArray[10].velocity = glm::vec3(0);
+	particleArray[10].possition = myCube.possition + glm::vec3(1);
+	ApplyForce(particleArray[10], shotVector);
 }
 
 ////////////// It's shooting time//////////////////
 glm::vec3 calculateShot(Shapes me, Shapes target)
 {
-	bool xNagative = false;
-	bool yNagative = false;
-	bool zNagative = false;
-	float distanceBetween = sqrt(getSquareDistance(me, target));//square root for now
+	float speedOfShot = 10;
+	float distanceBetween = sqrt(getSquareDistance(me, target));
 	glm::vec3 currentSpeedOfTarget = target.velocity;
-	float TimeToTarget = distanceBetween / 5;
+	float TimeToTarget = distanceBetween / speedOfShot;
+	cout << TimeToTarget << "\n";
 	Shapes WhereTargetWillBe;
 	WhereTargetWillBe.possition = target.possition + (target.velocity * TimeToTarget);
-	glm::vec3 shotPosition = sqrt(abs((abs(WhereTargetWillBe.possition * WhereTargetWillBe.possition)) + (abs(me.possition * me.possition))));
-	float diffX = shotPosition[0] - me.possition[0];
-	if (diffX < 0)
-	{
-		xNagative = true;
-	}
-	float diffY = shotPosition[1] - me.possition[1];
-	if (diffY < 0)
-	{
-		yNagative = true;
-	}
-	float diffZ = shotPosition[2] - me.possition[2];
-	if (diffZ < 0)
-	{
-		zNagative = true;
-	}
-	float xz = sqrt(abs((abs(diffX * diffX)) + (abs(diffZ * diffZ))));
-	float xzy = sqrt(abs((abs(xz * xz)) + (abs(diffY * diffY))));
-	float shrinkingCoefficent;
-	shrinkingCoefficent = xzy / 5;
-	glm::vec3 shotVector = shotPosition * shrinkingCoefficent;
-	if (xNagative == true)
-	{
-		shotVector[0] = shotVector[0] * -1;
-	}
-	if (yNagative == true)
-	{
-		shotVector[1] = shotVector[1] * -1;
-	}
-	if (zNagative == true)
-	{
-		shotVector[2] = shotVector[2] * -1;
-	}
-	takeShot(shotVector);
-	return shotVector;
+	cout << target.possition[0] << " " << target.possition[1] << " " << target.possition[2] << "\n ";
+	cout << WhereTargetWillBe.possition[0] << " " << WhereTargetWillBe.possition[1] << " " << WhereTargetWillBe.possition[2] << "\n ";
+	
+	glm::vec3 shotVector = sqrt(abs((abs(WhereTargetWillBe.possition * WhereTargetWillBe.possition)) + (abs(me.possition * me.possition))));
+
+	float totalSizeOfVector = shotVector[0] + shotVector[1] + shotVector[2];
+	glm::vec3 shotShrunk;
+	shotShrunk[0] = shotVector[0] / totalSizeOfVector * speedOfShot;
+	shotShrunk[1] = shotVector[1] / totalSizeOfVector * speedOfShot;
+	shotShrunk[2] = shotVector[2] / totalSizeOfVector * speedOfShot;
+	takeShot(shotShrunk);
+	return shotShrunk;
 }
 
+void fireMissle(EnemyShip* thisShip)
+{
+	EnemyShip& ship = *thisShip;
+	missleArray[ship.missleCounter].possition = ship.possition + ship.velocity;
+	missleArray[ship.missleCounter].velocity = glm::vec3(0.1f);
+	missleArray[ship.missleCounter].colour = glm::vec3(0.5f, 0.5f, 0.5f);
+	missleArray[ship.missleCounter].fillColor = glm::vec4(0.5f, 0.0f, 0.5f, 1.0f);
+	missleArray[ship.missleCounter].useTarget =  true;
+	missleArray[ship.missleCounter].speed = 10.0f;
+	missleArray[ship.missleCounter].fired = true;
+	missleArray[ship.missleCounter].deathCounter = 0;
+	ship.missleCounter += 1;
+	if (ship.missleCounter == 9)
+	{
+		ship.missleCounter = 0;
+	}
+}
 
+void loadMissles(Missle thisMissleArray[], AllMissle *theseMissles, int missleArraySize)
+{
+	AllMissle& missles = *theseMissles;
+	for (int x = 0; x < missleArraySize; x++)
+	{
+		Missle& thisMissle = thisMissleArray[x];
+		thisMissle.Load();
+		thisMissle.collision_type = AAcube;
+		thisMissle.hasGravity = false;
+		thisMissle.possition = glm::vec3(x, -x, x);
+		thisMissle.mass = 0.01f;
+		thisMissle.invMass = 100.0f;
+		thisMissle.velocity = glm::vec3(0.1f);
+		thisMissle.colour = glm::vec3(0.5f, 0.5f, 0.5f);
+		thisMissle.fillColor = glm::vec4(0.5f, 0.0f, 0.5f, 1.0f);
+		thisMissle.useTarget = false;
+		missles.missleList.push_back(&thisMissle);
+		allShapes.push_back(missles.missleList[x]);
+	}
+}
 
+void loadBullets(Particle bulletArray[], int bulletArraySize)
+{
+	for (int x = 0; x < bulletArraySize; x += 1) {
+		Particle& thisBullet = bulletArray[x];
+		thisBullet.Load();
+		thisBullet.collision_type = sphere;
+		thisBullet.w_matrix =
+			glm::translate(glm::vec3(1 + x, -1.0f, 0.0f)) *
+			glm::mat4(1.0f);
+		thisBullet.mass = 0.1f;
+		thisBullet.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		allShapes.push_back(&thisBullet);
+		allParticles.push_back(&thisBullet);
+	}
+}
 
+void updateMissle() 
+{
+	missles.target = getposition(myCube);
+	missles.updatePositions();
+
+	for (int i = 0; i < missles.missleList.size(); i++) {
+		missles.steer(i);
+	}
+	for (int x = 0; x < size(missleArray); x++)
+	{
+		if (missleArray[x].fired == true)
+		{
+			missleArray[x].deathCounter += 1;
+			if (missleArray[x].deathCounter == Ship[1].maxFuel)
+			{
+				missleArray[x].velocity = glm::vec3(0);
+				missleArray[x].possition = glm::vec3(0, -10, x);
+				missleArray[x].deathCounter = 0;
+				missleArray[x].fired = false;
+				missleArray[x].useTarget = false;
+			}
+		}
+	}
+}
 ///////////////start uo/////////////////
 
 
 void startup() {
+	glm::vec3 force = glm::vec3(1.0f, 0, 0);
 	// Keep track of the running time
 	GLfloat currentTime = (GLfloat)glfwGetTime();    // retrieve timelapse
 	deltaTime = currentTime;                        // start delta time
 	lastTime = currentTime;                            // Save for next frame calculations.
-
+	loadMissles(missleArray, &missles, 10);
 	// Callback graphics and key update functions - declared in main to avoid scoping complexity.
 	// More information here : https://www.glfw.org/docs/latest/input_guide.html
 	glfwSetWindowSizeCallback(myGraphics.window, onResizeCallback);            // Set callback for resize
@@ -1332,18 +1389,17 @@ void startup() {
 		allShapes.push_back(&myTarget);
 
 	}
-	
+
 	// Load Geometry examples
 	myCube2.Load();
 	myCube2.mass = 1.0f;
 	myCube2.invMass = 1.0f;
 	myCube2.w_matrix =
-		glm::translate(glm::vec3(-4.0f, 0.5f, 4.0f)) *
+		glm::translate(glm::vec3(-4.0f, 0.5f, 10.0f)) *
 		glm::mat4(1.0f);
 	myCube2.collision_type = AAcube;
 	myCube2.fillColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	allShapes.push_back(&myCube2);
-	glm::vec3 force = glm::vec3(1.0f, 0, 0);
 	ApplyForce(myCube2, force);
 
 	myCube.Load();
@@ -1480,6 +1536,8 @@ void updateSceneElements() {
 	applyGravity();
 	checkCollisions(); // check collistion
 	//Every third frame produce a new droplet of water for the fountain
+
+	updateMissle();
 	if (fountains == true) {
 		if (frameNumber % 3 == 0) {
 			fountainParticles();
@@ -1605,6 +1663,7 @@ void renderScene() {
 	arrowY.Draw();
 	arrowZ.Draw();
 	myLine.Draw();
+
 }
 
 
@@ -1696,7 +1755,9 @@ void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mo
 	if (keyStatus[GLFW_KEY_T]) {
 		calculateShot(myCube, myCube2);
 	}
-
+	if (keyStatus[GLFW_KEY_Y]) {
+		fireMissle(&Ship[1]);
+	}
 }
 
 void onMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {

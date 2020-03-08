@@ -151,7 +151,7 @@ void boidFlock::steer(int i) {
 		}
 		targetSteer = targetSteer * maxSpeed;
 		targetSteer -= boidVelocity[i];
-		v = boidI.velocity + 0.1f  * ((alignSteering * alignValue + cohesionSteering * cohesionValue + SepSteering * seperationValue) + targetSteer);
+		v = boidI.velocity + 0.1f  * ((alignSteering * alignValue + cohesionSteering * cohesionValue + SepSteering * seperationValue) + (0.3f * targetSteer));
 	}
 	else {// dont use target 
 

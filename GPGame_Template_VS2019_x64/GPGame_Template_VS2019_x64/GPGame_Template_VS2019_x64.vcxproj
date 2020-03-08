@@ -160,12 +160,14 @@
     <ClCompile Include="boidFlock.cpp" />
     <ClCompile Include="GPGame_Template_VS2019_x64.cpp" />
     <ClCompile Include="graphics.cpp" />
+    <ClCompile Include="Missle.cpp" />
     <ClCompile Include="Search.cpp" />
     <ClCompile Include="shapes.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boidFlock.h" />
     <ClInclude Include="graphics.h" />
+    <ClInclude Include="Missle.h" />
     <ClInclude Include="Search.h" />
     <ClInclude Include="shapes.h" />
   </ItemGroup>

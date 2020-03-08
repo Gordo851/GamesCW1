@@ -9,8 +9,6 @@ using namespace std;
 #include <glm/glm.hpp>
 
 
-
-
 enum CollisionType // collision types 
 {
 	sphere,
@@ -124,10 +122,35 @@ public:
 	//glm::vec3 position;
 	Boid();
 	~Boid();
-	float speed = 1.0f; // 1 - 4 works well
+	float speed = 10.0f; // 1 - 4 works well
 	float range = 5.0f; // sight range
 	float minDist = 1.5f; // seperation distance
 	glm::vec3 colour = glm::vec3(0.5f); // used to calcualte average colour
 
 private:
+};
+
+class Missle : public Shapes {
+public:
+	//glm::vec3 position;
+	Missle();
+	~Missle();
+	float speed = 10.0f; // 1 - 4 works well
+	float range = 5.0f; // sight range
+	float minDist = 1.5f; // seperation distance
+	glm::vec3 colour = glm::vec3(0.5f); // used to calcualte average colour
+	bool useTarget = false;
+	bool fired = false;
+	float deathCounter = 0; //simulate limited Fuel
+private:
+};
+
+class EnemyShip : public Shapes {
+public:
+	EnemyShip();
+	~EnemyShip();
+	int missleAmmo = 10;
+	int bulletAmmo = 20;
+	int missleCounter = 0;
+	float maxFuel = 100.0f;
 };

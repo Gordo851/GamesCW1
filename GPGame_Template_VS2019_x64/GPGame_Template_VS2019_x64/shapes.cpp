@@ -2,9 +2,11 @@
 #include <iostream>
 #include <sstream>
 
+#include <vector>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
 
 Shapes::Shapes() {
 
@@ -670,4 +672,61 @@ f 5 2 4)";
 
 Boid::~Boid() {
 
+}
+
+Missle::Missle()
+{
+	rawData = R"(
+o Object.1
+v -0.2210637 -0.2000062 0.1999999
+v -0.2210639 -0.2000062 -0.1999999
+v 0.4789539 0.0000198 -0.0000203
+v -0.2210636 0.2000061 0.1999999
+v -0.2210638 0.2000061 -0.1999999
+
+usemtl Yellow_0
+f 1 2 3
+f 4 2 1
+f 1 3 4
+f 2 5 3
+f 5 4 3
+f 5 2 4)";
+
+	LoadObj();
+}
+Missle::~Missle()
+{
+}
+
+EnemyShip::EnemyShip()
+{
+	// Exported from Blender a cube by default (OBJ File)
+	rawData = R"(
+v 0.500000 -0.500000 -0.500000
+v 0.500000 -0.500000 0.500000
+v -0.500000 -0.500000 0.500000
+v -0.500000 -0.500000 -0.500000
+v 0.500000 0.500000 -0.499999
+v 0.499999 0.500000 0.500000
+v -0.500000 0.500000 0.500000
+v -0.500000 0.500000 -0.500000
+f 1 3 4
+f 8 6 5
+f 5 2 1
+f 6 3 2
+f 7 4 3
+f 1 8 5
+f 1 2 3
+f 8 7 6
+f 5 6 2
+f 6 7 3
+f 7 8 4
+f 1 4 8)";
+
+	LoadObj();
+	
+}
+
+EnemyShip::~EnemyShip()
+{
 }
